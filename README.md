@@ -1,6 +1,6 @@
 # Single Photon Image Reconstruction
 
-**ES 335 Course Project** · Special Mention – CCD CVPR Workshop, June 2026
+**ES 335 Course Project**
 
 A deep learning project for reconstructing high-quality RGB images from sparse single-photon measurements, using U-Net, Residual U-Net, Attention U-Net, Attention-Residual U-Net, and Vision Transformer architectures.
 
