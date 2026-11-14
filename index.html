@@ -37,12 +37,12 @@
     <div class="photon-particles" id="particles"></div>
     <div class="hero-content">
       <h1>Single Photon<br/><span class="gradient-text">Image Reconstruction</span></h1>
-      <p class="hero-sub">Recovering high-quality RGB images from sparse, noisy single-photon measurements using deep learning — U-Net, Attention, Residual, and Transformer architectures.</p>
+      <p class="hero-sub">Deep learning image reconstruction pipeline for the Single Photon Challenge: from statistical frame averaging and CNNs to U-Net, Attention U-Net, our proposed <strong>Attention-Residual U-Net</strong> (featuring GroupNorm &amp; Global Residual Learning), and Vision Transformers.</p>
       <div class="hero-stats">
-        <div class="stat-pill"><span class="stat-num">5</span><span class="stat-lbl">Architectures</span></div>
-        <div class="stat-pill"><span class="stat-num">50</span><span class="stat-lbl">Scenes</span></div>
+        <div class="stat-pill"><span class="stat-num">6</span><span class="stat-lbl">Models</span></div>
+        <div class="stat-pill"><span class="stat-num">50</span><span class="stat-lbl">Epochs (Cosine)</span></div>
         <div class="stat-pill"><span class="stat-num">384</span><span class="stat-lbl">Input Channels</span></div>
-        <div class="stat-pill"><span class="stat-num">800²</span><span class="stat-lbl">Output Resolution</span></div>
+        <div class="stat-pill"><span class="stat-num">800²</span><span class="stat-lbl">Resolution</span></div>
       </div>
       <a href="#problem" class="btn-primary">Explore Project ↓</a>
     </div>
@@ -241,38 +241,66 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
     <section id="methods" class="section section-alt">
       <div class="container">
         <div class="section-label">04 · Baseline &amp; Methods</div>
-        <h2 class="section-title">Architectures Explored</h2>
-        <p class="section-intro">We began with a simple CNN baseline and progressively added complexity — U-Net skip connections, residual blocks, attention gates, and finally Vision Transformers.</p>
+        <h2 class="section-title">Architectures &amp; Methodology</h2>
+        <p class="section-intro">From traditional statistical photon estimation to deep convolutional networks, our primary contribution in the challenge paper is an <strong>Attention Residual U-Net with Group Normalization and Global Residual Learning</strong>. We also explored Vision Transformers as an extended inquiry into global non-local self-attention.</p>
 
         <div class="arch-tabs">
           <div class="tab-buttons">
-            <button class="tab-btn active" data-tab="baseline">CNN Baseline</button>
+            <button class="tab-btn" data-tab="naive">Naïve Baseline</button>
+            <button class="tab-btn" data-tab="baseline">CNN</button>
             <button class="tab-btn" data-tab="unet">U-Net</button>
-            <button class="tab-btn" data-tab="resunet">Residual U-Net</button>
             <button class="tab-btn" data-tab="attnunet">Attention U-Net</button>
-            <button class="tab-btn" data-tab="attnres">Attn-Res U-Net</button>
-            <button class="tab-btn" data-tab="transformer">Transformer</button>
+            <button class="tab-btn active" data-tab="attnres">Attn-Res U-Net (Paper ⭐)</button>
+            <button class="tab-btn" data-tab="transformer">Transformer (Ext.)</button>
           </div>
 
-          <div class="tab-content active" id="tab-baseline">
+          <!-- TAB 1: NAIVE BASELINE -->
+          <div class="tab-content" id="tab-naive">
             <div class="arch-layout">
               <div class="arch-desc">
-                <h3>Plain CNN Baseline</h3>
-                <p>A straightforward convolutional network without skip connections. Used to establish a performance floor before adding architectural complexity.</p>
+                <h3>Naïve Statistical Baseline</h3>
+                <p>Early photon-limited imaging relies on statistical reconstruction techniques such as Poisson denoising and temporal frame averaging, modeling photon arrivals as an inhomogeneous Poisson process.</p>
                 <ul>
-                  <li>Input: 384 channels → Conv2D stack → 3 channels</li>
-                  <li>No skip connections, no encoder-decoder structure</li>
-                  <li>Serves as lower bound for all other models</li>
+                  <li>Direct temporal averaging across accumulated photon frames</li>
+                  <li>No learned feature representations or structural priors</li>
+                  <li>Serves as the empirical floor for image reconstruction</li>
                 </ul>
                 <div class="arch-assumption">
-                  <strong>Assumption:</strong> Even without structure, stacked convolutions can learn a photon-to-image mapping from enough data.
+                  <strong>Limitation:</strong> Under extreme low-light regimes with high sparsity, statistical averaging generates heavily oversmoothed images devoid of high-frequency edges and texture detail.
                 </div>
               </div>
               <div class="arch-diagram">
                 <div class="arch-flow">
-                  <div class="arch-block input-block">(384, 800, 800)<br/>Input</div>
+                  <div class="arch-block input-block">(128, 800, 800, 3)<br/>Raw Bitplanes</div>
                   <div class="arch-conn">↓</div>
-                  <div class="arch-block conv-block">Conv2D Layers<br/>(384→256→128→64→32)</div>
+                  <div class="arch-block conv-block">Temporal Frame Averaging<br/>&amp; Poisson Denoising Filter</div>
+                  <div class="arch-conn">↓</div>
+                  <div class="arch-block output-block">(3, 800, 800)<br/>Smoothed Output</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: CNN -->
+          <div class="tab-content" id="tab-baseline">
+            <div class="arch-layout">
+              <div class="arch-desc">
+                <h3>Convolutional Neural Network (CNN)</h3>
+                <p>A multi-layer feed-forward CNN mapping noisy photon channels directly to clean RGB pixels. CNNs extract localized spatial features across stacked receptive fields.</p>
+                <ul>
+                  <li>Input: 384 channels &rarr; Sequential Conv2D layers &rarr; 3-channel RGB</li>
+                  <li>Plain feed-forward hierarchy without skip pathways</li>
+                  <li>Establishes baseline deep learning performance</li>
+                </ul>
+                <div class="arch-assumption">
+                  <strong>Limitation:</strong> Without encoder-decoder downsampling and skip connections, plain CNNs struggle to maintain multi-scale context and lose fine-grained spatial information.
+                </div>
+              </div>
+              <div class="arch-diagram">
+                <div class="arch-flow">
+                  <div class="arch-block input-block">(384, 800, 800)<br/>Input Tensor</div>
+                  <div class="arch-conn">↓</div>
+                  <div class="arch-block conv-block">Stacked Conv2D Layers<br/>(384 &rarr; 256 &rarr; 128 &rarr; 64 &rarr; 32)</div>
                   <div class="arch-conn">↓</div>
                   <div class="arch-block output-block">(3, 800, 800)<br/>RGB Output</div>
                 </div>
@@ -280,174 +308,186 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             </div>
           </div>
 
+          <!-- TAB 3: U-NET -->
           <div class="tab-content" id="tab-unet">
             <div class="arch-layout">
               <div class="arch-desc">
-                <h3>U-Net</h3>
-                <p>The core architecture. Combines an encoder that extracts multi-scale features with a decoder that reconstructs spatial detail, connected via skip connections that transfer fine spatial information.</p>
+                <h3>U-Net Architecture</h3>
+                <p>An encoder-decoder network featuring direct skip connections between opposing stages. The contracting path captures contextual representations, while the symmetric expanding path enables precise localization.</p>
                 <ul>
-                  <li><strong>Encoder:</strong> Conv2D + MaxPool, progressively downsampling</li>
-                  <li><strong>Bottleneck:</strong> Deepest abstract feature representation</li>
-                  <li><strong>Decoder:</strong> Transposed convolutions + skip connection concat</li>
-                  <li><strong>Output:</strong> <code>Conv2d(32, 3) → Sigmoid</code></li>
+                  <li><strong>Encoder:</strong> Convolutions + Max-Pooling downsampling</li>
+                  <li><strong>Skip Connections:</strong> Transfer spatial high-resolution features across the bottleneck</li>
+                  <li><strong>Decoder:</strong> Transposed convolutions with feature concatenation</li>
                 </ul>
                 <div class="arch-assumption">
-                  <strong>Why appropriate:</strong> Skip connections preserve fine spatial detail critical for pixel-accurate reconstruction — essential when input sparsity causes information loss.
+                  <strong>Why appropriate:</strong> Skip connections mitigate the spatial information loss caused by single-photon sparsity and pooling operations.
                 </div>
               </div>
               <div class="arch-diagram">
                 <div class="arch-flow unet-flow">
-                  <div class="arch-block input-block">(384,800,800)</div>
+                  <div class="arch-block input-block">(384, 800, 800)</div>
                   <div class="arch-conn">↓</div>
-                  <div class="arch-block enc-block">Enc 1 · 256ch</div>
+                  <div class="arch-block enc-block">Encoder Stages (Downsampling)</div>
                   <div class="arch-conn">↓</div>
-                  <div class="arch-block enc-block">Enc 2 · 128ch</div>
+                  <div class="arch-block bottle-block">Bottleneck Latent Representation</div>
+                  <div class="arch-conn">&uarr;</div>
+                  <div class="arch-block dec-block">Decoder Stages + Skip Concat &harr;</div>
                   <div class="arch-conn">↓</div>
-                  <div class="arch-block bottle-block">Bottleneck · 64ch</div>
-                  <div class="arch-conn">↑</div>
-                  <div class="arch-block dec-block">Dec 2 + Skip ↔</div>
-                  <div class="arch-conn">↑</div>
-                  <div class="arch-block dec-block">Dec 1 + Skip ↔</div>
-                  <div class="arch-conn">↓</div>
-                  <div class="arch-block output-block">(3,800,800) · Sigmoid</div>
+                  <div class="arch-block output-block">(3, 800, 800) Output</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="tab-content" id="tab-resunet">
-            <div class="arch-layout">
-              <div class="arch-desc">
-                <h3>Residual U-Net</h3>
-                <p>Replaces plain convolution blocks with <strong>residual blocks</strong> containing shortcut connections. This improves gradient flow and allows training deeper networks without vanishing gradients.</p>
-                <ul>
-                  <li>Each conv block becomes: <code>x + Conv(Conv(x))</code></li>
-                  <li>Shortcut learns identity mapping as a fallback</li>
-                  <li>Enables effective depth increase without degradation</li>
-                </ul>
-                <div class="arch-assumption">
-                  <strong>Why appropriate:</strong> Deeper networks can capture more complex photon-to-pixel mappings; residual connections make this training stable.
-                </div>
-              </div>
-              <div class="arch-diagram">
-                <div class="res-block-vis">
-                  <div class="res-main">
-                    <div class="res-step">Conv2D + BN + ReLU</div>
-                    <div class="res-step">Conv2D + BN</div>
-                  </div>
-                  <div class="res-skip">Identity / 1×1 Conv</div>
-                  <div class="res-add">⊕ Add → ReLU</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
+          <!-- TAB 4: ATTENTION U-NET -->
           <div class="tab-content" id="tab-attnunet">
             <div class="arch-layout">
               <div class="arch-desc">
                 <h3>Attention U-Net</h3>
-                <p>Adds <strong>attention gates</strong> on the skip connections. Before concatenating encoder features to the decoder, the attention gate weights them by relevance — suppressing noise, amplifying signal.</p>
+                <p>Introduces <strong>spatial attention gates</strong> to selectively filter skip connections prior to concatenation. The gating mechanism uses coarser decoder features to highlight informative regions in the encoder features.</p>
                 <ul>
-                  <li>Attention gate uses decoder signal to gate encoder features</li>
-                  <li>Outputs a soft spatial mask α ∈ [0,1] per feature</li>
-                  <li>Particularly useful for sparse-input problems</li>
+                  <li>Computes attention coefficients: &alpha; = &sigma;(&psi;(ReLU(W<sub>g</sub>g + W<sub>x</sub>x)))</li>
+                  <li>Refined feature maps: x&#770; = &alpha; &odot; x</li>
+                  <li>Suppresses sparse noise and background zeros while amplifying photon hit signals</li>
                 </ul>
                 <div class="arch-assumption">
-                  <strong>Why appropriate:</strong> Single-photon inputs are mostly zeros. Attention lets the model focus only on pixels/features where actual photon hits carry information.
+                  <strong>Why appropriate:</strong> With photon data being over 90% sparse, attention gates prevent noisy and non-informative background features from overwhelming the decoder.
                 </div>
               </div>
               <div class="arch-diagram">
                 <div class="attn-vis">
                   <div class="attn-row">
-                    <div class="attn-box enc">Encoder<br/>Feature</div>
-                    <div class="attn-box dec">Decoder<br/>Signal</div>
+                    <div class="attn-box enc">Encoder Feature (x)</div>
+                    <div class="attn-box dec">Decoder Gating (g)</div>
                   </div>
-                  <div class="attn-arrow">↓ Gate ↓</div>
-                  <div class="attn-box gate">α · Encoder Feature<br/>(spatially weighted)</div>
+                  <div class="attn-arrow">↓ W<sub>g</sub>g + W<sub>x</sub>x &rarr; ReLU &rarr; &psi; &rarr; &sigma; ↓</div>
+                  <div class="attn-box gate">Spatial Attention Map (&alpha;)<br/>x&#770; = &alpha; &odot; x</div>
                   <div class="attn-arrow">↓</div>
-                  <div class="attn-box concat">Concat → Decoder</div>
+                  <div class="attn-box concat">Concat with Upsampled Decoder</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="tab-content" id="tab-attnres">
+          <!-- TAB 5: ATTENTION RESIDUAL U-NET (PAPER'S CORE PROPOSAL) -->
+          <div class="tab-content active" id="tab-attnres">
             <div class="arch-layout">
               <div class="arch-desc">
-                <h3>Attention + Residual U-Net</h3>
-                <p>Combines both improvements: <strong>residual blocks</strong> for deeper, more stable training and <strong>attention gates</strong> for focused feature selection on sparse inputs.</p>
+                <h3>Attention Residual U-Net <span style="color:var(--accent3);font-size:0.85rem;font-weight:700;">(Paper's Proposed Model)</span></h3>
+                <p>Our proposed architecture in the challenge paper integrates <strong>residual blocks with Group Normalization</strong>, <strong>attention-gated skip connections</strong>, and an explicit <strong>global residual shortcut</strong>.</p>
                 <ul>
-                  <li>Every encoder/decoder block is a residual block</li>
-                  <li>Every skip connection passes through an attention gate</li>
-                  <li>Most capable of the U-Net family</li>
+                  <li><strong>Residual Unit:</strong> y = &sigma;(GN(Conv<sub>2</sub>(&sigma;(GN(Conv<sub>1</sub>(x)))))) + S(x) with GroupNorm for small batch stability and 1&times;1 conv projection for dimension matching.</li>
+                  <li><strong>Encoder Hierarchy:</strong> 3 stages (128 &rarr; 256 &rarr; 512 channels) followed by 2&times;2 Max-Pooling.</li>
+                  <li><strong>Bottleneck:</strong> Dual residual blocks with 1024 channels at H/8 &times; W/8 resolution.</li>
+                  <li><strong>Attention-Gated Decoder:</strong> Transposed convolutions (1024 &rarr; 512 &rarr; 256 &rarr; 128) with spatial attention maps &alpha; = &sigma;(&psi;(ReLU(W<sub>g</sub>g + W<sub>x</sub>x))).</li>
+                  <li><strong>Global Residual Connection:</strong> Channel-wise mean x<sub>mean</sub> = (1/C)&sum;x<sub>c</sub> added directly to output: y<sub>final</sub> = y<sub>net</sub> + x<sub>mean</sub> to preserve global photon flux!</li>
+                  <li><strong>Output Layer:</strong> 1&times;1 convolution mapping 128 channels to 3-channel RGB.</li>
                 </ul>
                 <div class="arch-assumption">
-                  <strong>Why appropriate:</strong> Addresses both challenges simultaneously — training stability (residual) and input sparsity (attention).
+                  <strong>Core Insight:</strong> GroupNorm eliminates BatchNorm batch-size dependency, attention gates focus on sparse photon signals, and the global residual bypass preserves base illumination.
                 </div>
               </div>
               <div class="arch-diagram">
-                <div class="combo-vis">
-                  <div class="combo-label">Residual Enc Block</div>
-                  <div class="combo-down">↓</div>
-                  <div class="combo-label">Attention Gate on Skip</div>
-                  <div class="combo-down">↓</div>
-                  <div class="combo-label">Residual Dec Block</div>
-                  <div class="combo-down">↓</div>
-                  <div class="combo-label">Output (Sigmoid)</div>
+                <div class="arch-flow">
+                  <div class="arch-block input-block">(384, H, W) Input &rarr; Compute x<sub>mean</sub></div>
+                  <div class="arch-conn">↓</div>
+                  <div class="arch-block enc-block">Enc 1: ResBlock 128 ch &rarr; MaxPool</div>
+                  <div class="arch-conn">↓</div>
+                  <div class="arch-block enc-block">Enc 2: ResBlock 256 ch &rarr; MaxPool</div>
+                  <div class="arch-conn">↓</div>
+                  <div class="arch-block enc-block">Enc 3: ResBlock 512 ch &rarr; MaxPool</div>
+                  <div class="arch-conn">↓</div>
+                  <div class="arch-block bottle-block">Bottleneck: ResBlock &times; 2 (1024 ch)</div>
+                  <div class="arch-conn">&uarr;</div>
+                  <div class="arch-block dec-block">Dec: TransConv + Attention Skip + ResBlock</div>
+                  <div class="arch-conn">↓</div>
+                  <div class="arch-block conv-block">Conv 1&times;1 (128 &rarr; 3 ch)</div>
+                  <div class="arch-conn">↓</div>
+                  <div class="arch-block output-block">y<sub>final</sub> = y<sub>net</sub> + x<sub>mean</sub> (3, H, W)</div>
                 </div>
               </div>
             </div>
           </div>
 
+          <!-- TAB 6: TRANSFORMER (EXTENDED STUDY) -->
           <div class="tab-content" id="tab-transformer">
             <div class="arch-layout">
               <div class="arch-desc">
-                <h3>Vision Transformer</h3>
-                <p>A transformer-based approach that models long-range dependencies across the image using self-attention over patch tokens — fundamentally different from convolutional locality bias.</p>
+                <h3>Vision Transformer <span style="color:var(--accent);font-size:0.85rem;font-weight:600;">(Extended Exploration)</span></h3>
+                <p>Investigated beyond the core paper submission to evaluate non-local global self-attention mechanisms against convolutional inductive biases.</p>
                 <ul>
-                  <li>Image split into patches → patch embeddings</li>
-                  <li>Multi-head self-attention across all patches</li>
-                  <li>Can capture global spatial relationships</li>
-                  <li>Requires more data / compute than CNNs</li>
+                  <li>Decomposes photon feature maps into non-overlapping spatial patches</li>
+                  <li>Multi-Head Self-Attention (MHSA) computes long-range token relationships</li>
+                  <li>Evaluates whether global spatial context can overcome photon arrival sparsity</li>
                 </ul>
                 <div class="arch-assumption">
-                  <strong>Why appropriate:</strong> Photon reconstruction can benefit from global context — a photon hit in one region can help infer structure in another. Transformers model this naturally.
+                  <strong>Observation:</strong> While capable of modeling distant correlations, transformers require substantially larger training corpora and compute to outperform attention-gated convolutional models on extreme low-count photon arrays.
                 </div>
               </div>
               <div class="arch-diagram">
                 <div class="transformer-vis">
-                  <div class="trans-step">Image Patches (tokens)</div>
+                  <div class="trans-step">Input Patch Projection &amp; Positional Encoding</div>
                   <div class="trans-arrow">↓</div>
-                  <div class="trans-step">Positional Embedding</div>
+                  <div class="trans-step">Multi-Head Self-Attention (MHSA) Layers</div>
                   <div class="trans-arrow">↓</div>
-                  <div class="trans-step">Multi-Head Self-Attention</div>
+                  <div class="trans-step">Feed-Forward Network (FFN) + LayerNorm</div>
                   <div class="trans-arrow">↓</div>
-                  <div class="trans-step">FFN + Layer Norm</div>
-                  <div class="trans-arrow">↓</div>
-                  <div class="trans-step">Reconstruct → RGB</div>
+                  <div class="trans-step">Token Reconstruction &rarr; RGB Image</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Loss Functions -->
+        <!-- Loss Functions & Optimization -->
         <div class="loss-section">
-          <h3>Loss Functions</h3>
-          <p>We combined three complementary losses to push beyond pixel accuracy toward perceptual quality:</p>
-          <div class="loss-eq">L<sub>total</sub> = λ₁·L<sub>L1</sub> + λ₂·L<sub>SSIM</sub> + λ₃·L<sub>VGG</sub></div>
+          <h3>Loss Formulation &amp; Training Strategy</h3>
+          <p>Supervision combines multi-scale pixel, structural, and perceptual losses as formulated in Equation 7 of our paper:</p>
+          <div class="loss-eq">&Lscr; = 0.7 &middot; &Lscr;<sub>L1</sub> + 0.2 &middot; &Lscr;<sub>SSIM</sub> + 0.1 &middot; &Lscr;<sub>VGG</sub></div>
           <div class="loss-cards">
             <div class="loss-card">
-              <div class="loss-name">L₁ Loss</div>
-              <div class="loss-purpose">Pixel-wise absolute error. Provides stable, unambiguous gradient signal toward the correct pixel values.</div>
+              <div class="loss-name">&Lscr;<sub>L1</sub> Pixel Loss (0.7)</div>
+              <div class="loss-purpose">Measures pixel-wise absolute difference between prediction and ground truth. Provides strong, monotonic gradients for baseline intensity reconstruction.</div>
             </div>
             <div class="loss-card">
-              <div class="loss-name">SSIM Loss</div>
-              <div class="loss-purpose">Structural similarity — preserves luminance, contrast, and local structure beyond raw pixel accuracy.</div>
+              <div class="loss-name">&Lscr;<sub>SSIM</sub> Structural Loss (0.2)</div>
+              <div class="loss-purpose">Maximizes luminance, contrast, and structural correlation. Prevents blurring and preserves structural integrity under high Poisson noise.</div>
             </div>
             <div class="loss-card">
-              <div class="loss-name">VGG / Perceptual Loss</div>
-              <div class="loss-purpose">Compares deep features from a pretrained VGG network. Encourages perceptually natural textures and edges.</div>
+              <div class="loss-name">&Lscr;<sub>VGG</sub> Perceptual Loss (0.1)</div>
+              <div class="loss-purpose">Extracts deep feature differences from a pre-trained VGG-16 (up to layer 16, frozen, ImageNet normalized). Enforces natural edges and semantic textures.</div>
+            </div>
+          </div>
+
+          <!-- Optimization Details from Paper Section 3.3 -->
+          <div class="info-cards" style="margin-top:2rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); display:grid;">
+            <div class="info-card">
+              <div class="info-icon">⚙</div>
+              <div>
+                <strong>Optimizer: AdamW</strong>
+                <p>Learning rate &eta;<sub>0</sub> = 1&times;10<sup>-4</sup>, weight decay = 1&times;10<sup>-4</sup>, gradient clipping norm &le; 1.0.</p>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="info-icon">📉</div>
+              <div>
+                <strong>Cosine Annealing Schedule</strong>
+                <p>&eta;<sub>t</sub> = &eta;<sub>min</sub> + &frac12;(&eta;<sub>0</sub> - &eta;<sub>min</sub>)(1 + cos(&pi;t / T<sub>max</sub>)) with T<sub>max</sub> = 50 epochs and &eta;<sub>min</sub> = 10<sup>-6</sup>.</p>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="info-icon">⚡</div>
+              <div>
+                <strong>Mixed Precision (AMP)</strong>
+                <p>Automatic mixed precision with torch.cuda.amp GradScaler for GPU throughput and memory efficiency.</p>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="info-icon">📊</div>
+              <div>
+                <strong>Logging &amp; Checkpoints</strong>
+                <p>Checkpoints stored every 10 epochs. Model weights from epoch 50 restored for final evaluation and testing.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -520,21 +560,21 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
           <p>Select two architectures to compare their reconstruction outputs side-by-side. <em>(Replace placeholder images with your actual reconstruction results.)</em></p>
           <div class="compare-controls">
             <select id="leftArch" class="arch-select">
-              <option value="cnn">CNN Baseline</option>
+              <option value="naive">Naïve Baseline</option>
+              <option value="cnn">CNN</option>
               <option value="unet" selected>U-Net</option>
-              <option value="resunet">Residual U-Net</option>
               <option value="attnunet">Attention U-Net</option>
-              <option value="attnres">Attn-Res U-Net</option>
-              <option value="transformer">Transformer</option>
+              <option value="attnres">Attn-Res U-Net (Paper ⭐)</option>
+              <option value="transformer">Transformer (Ext.)</option>
             </select>
             <span class="vs-badge">vs</span>
             <select id="rightArch" class="arch-select">
-              <option value="cnn">CNN Baseline</option>
+              <option value="naive">Naïve Baseline</option>
+              <option value="cnn">CNN</option>
               <option value="unet">U-Net</option>
-              <option value="resunet">Residual U-Net</option>
               <option value="attnunet">Attention U-Net</option>
-              <option value="attnres" selected>Attn-Res U-Net</option>
-              <option value="transformer">Transformer</option>
+              <option value="attnres" selected>Attn-Res U-Net (Paper ⭐)</option>
+              <option value="transformer">Transformer (Ext.)</option>
             </select>
           </div>
 
@@ -542,7 +582,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             <div class="compare-side">
               <div class="compare-label" id="leftLabel">U-Net</div>
               <div class="compare-img-wrap">
-                <img id="leftImg" src="assets/placeholder_unet.svg" alt="Left architecture output" class="compare-img"/>
+                <img id="leftImg" src="assets/placeholder_gen.svg" alt="Left architecture output" class="compare-img"/>
                 <div class="compare-overlay" id="leftOverlay">
                   <span class="overlay-metric" id="leftPSNR">PSNR: — dB</span>
                   <span class="overlay-metric" id="leftSSIM">SSIM: —</span>
@@ -555,9 +595,9 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
               <div class="divider-line"></div>
             </div>
             <div class="compare-side">
-              <div class="compare-label" id="rightLabel">Attn-Res U-Net</div>
+              <div class="compare-label" id="rightLabel">Attn-Res U-Net (Paper ⭐)</div>
               <div class="compare-img-wrap">
-                <img id="rightImg" src="assets/placeholder_attnres.svg" alt="Right architecture output" class="compare-img"/>
+                <img id="rightImg" src="assets/placeholder_gen.svg" alt="Right architecture output" class="compare-img"/>
                 <div class="compare-overlay" id="rightOverlay">
                   <span class="overlay-metric" id="rightPSNR">PSNR: — dB</span>
                   <span class="overlay-metric" id="rightSSIM">SSIM: —</span>
@@ -575,58 +615,65 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             <thead>
               <tr>
                 <th>Architecture</th>
-                <th>PSNR ↑</th>
-                <th>MS-SSIM ↑</th>
-                <th>LPIPS ↓</th>
-                <th>Notes</th>
+                <th>PSNR (dB) &uarr;</th>
+                <th>SSIM &uarr;</th>
+                <th>MS-SSIM &uarr;</th>
+                <th>LPIPS &darr;</th>
+                <th>Status / Role</th>
               </tr>
             </thead>
             <tbody>
               <tr class="baseline-row">
-                <td>CNN Baseline</td>
+                <td>Naïve Baseline (Poisson Average)</td>
                 <td>—</td>
                 <td>—</td>
                 <td>—</td>
-                <td>Lower bound</td>
+                <td>—</td>
+                <td>Statistical Lower Bound</td>
+              </tr>
+              <tr class="baseline-row">
+                <td>CNN</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>Feed-Forward Baseline</td>
               </tr>
               <tr>
                 <td>U-Net</td>
                 <td>—</td>
                 <td>—</td>
                 <td>—</td>
-                <td>Core architecture</td>
-              </tr>
-              <tr>
-                <td>Residual U-Net</td>
                 <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td>Better gradient flow</td>
+                <td>Encoder-Decoder with Skips</td>
               </tr>
               <tr>
                 <td>Attention U-Net</td>
                 <td>—</td>
                 <td>—</td>
                 <td>—</td>
-                <td>Sparse-input focus</td>
+                <td>—</td>
+                <td>Spatial Gated Skips</td>
               </tr>
               <tr class="best-row">
                 <td>Attn-Res U-Net ⭐</td>
                 <td>—</td>
                 <td>—</td>
                 <td>—</td>
-                <td>Best overall</td>
+                <td>—</td>
+                <td><strong>Paper's Proposed Model (Best)</strong></td>
               </tr>
               <tr>
-                <td>Transformer</td>
+                <td>Vision Transformer</td>
                 <td>—</td>
                 <td>—</td>
                 <td>—</td>
-                <td>Global context</td>
+                <td>—</td>
+                <td>Extended Non-Local Exploration</td>
               </tr>
             </tbody>
           </table>
-          <p class="placeholder-note">📌 Fill in PSNR and SSIM values from your experiment logs.</p>
+          <p class="placeholder-note">📌 Fill in PSNR and SSIM values from your experiment logs in <code>index.html</code> and <code>js/main.js</code>.</p>
         </div>
       </div>
     </section>
@@ -718,10 +765,13 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             <div class="repro-num">1</div>
             <div class="repro-body">
               <h4>Get the Data</h4>
-              <p>Download the Single Photon Challenge dataset from Kaggle:</p>
-              <pre><code>kaggle competitions download -c single-photon-challenge
-# Or via browser: kaggle.com → search "Single Photon Challenge"</code></pre>
-              <p>Place <code>.npy</code> and <code>.png</code> files under <code>data/scenes/</code>.</p>
+              <p>Download the dataset from <a href="https://singlephotonchallenge.com" target="_blank" rel="noopener" style="color:var(--accent)">singlephotonchallenge.com</a>. Scene directories contain paired <code>.npy</code> photoncubes and <code>.png</code> ground-truth frames:</p>
+              <pre><code># Data organization
+data/
+  train/
+    &lt;scene_name&gt;/
+      &lt;frame_idx&gt;.npy   # raw bitpacked photon measurements (1024, 800, 100, 3)
+      &lt;frame_idx&gt;.png   # clean ground-truth RGB corresponding to last bitplane</code></pre>
             </div>
           </div>
           <div class="repro-step">
@@ -737,48 +787,65 @@ pip install torch torchvision numpy scikit-image torchmetrics</code></pre>
             <div class="repro-num">3</div>
             <div class="repro-body">
               <h4>Data Split</h4>
-              <pre><code>scenes = sorted(os.listdir("data/scenes/"))
-test_scenes  = scenes[:3]   # 3 held-out test scenes
+              <pre><code>import os
+scenes = sorted(os.listdir("data/train/"))
+val_scenes   = scenes[:3]   # 3 held-out validation scenes (scene-level split)
 train_scenes = scenes[3:]   # 47 training scenes</code></pre>
               <div class="callout callout-info">
-                ℹ Split is deterministic via <code>sorted()</code>. Use this exact split to reproduce test metrics.
+                ℹ Split is deterministic via <code>sorted()</code>. 47 scenes for training, 3 local scenes for validation.
               </div>
             </div>
           </div>
           <div class="repro-step">
             <div class="repro-num">4</div>
             <div class="repro-body">
-              <h4>Preprocessing</h4>
+              <h4>Preprocessing &amp; Decoding</h4>
               <pre><code>import numpy as np
+import torch
 
-def preprocess(path):
-    raw = np.load(path)              # (1024, 800, 100, 3)
-    frames = raw[-128:]              # (128, 800, 100, 3)
-    unpacked = np.unpackbits(frames.astype(np.uint8), axis=2)
-    # → (128, 800, 800, 3)
-    tensor = unpacked.transpose(0, 3, 1, 2).reshape(384, 800, 800)
-    return tensor.astype(np.float32)</code></pre>
+def preprocess_photoncube(path):
+    # 1. Load bitpacked array: (1024, 800, 100, 3)
+    raw = np.load(path, mmap_mode="r")
+    # 2. Select last 128 temporal frames
+    frames = raw[-128:]  # (128, 800, 100, 3)
+    # 3. Width-wise bit-unpacking along axis=2
+    unpacked = np.unpackbits(frames.astype(np.uint8), axis=2) # (128, 800, 800, 3)
+    # 4. Permute to channel-first (T, C, H, W)
+    permuted = unpacked.transpose(0, 3, 1, 2)                 # (128, 3, 800, 800)
+    # 5. Temporal aggregation into high-dim channel tensor
+    tensor = permuted.reshape(384, 800, 800)                  # (384, 800, 800)
+    return torch.from_numpy(tensor).float()</code></pre>
             </div>
           </div>
           <div class="repro-step">
             <div class="repro-num">5</div>
             <div class="repro-body">
-              <h4>Training</h4>
+              <h4>Training (Proposed Attention Residual U-Net)</h4>
               <pre><code>python train.py \
   --arch attn_res_unet \
-  --epochs 100 \
+  --epochs 50 \
   --lr 1e-4 \
-  --loss_weights 0.5 0.3 0.2   # L1, SSIM, VGG
+  --weight_decay 1e-4 \
+  --loss_weights 0.7 0.2 0.1 \
+  --scheduler cosine \
+  --t_max 50 \
+  --eta_min 1e-6 \
+  --grad_clip 1.0 \
+  --amp \
   --device cuda</code></pre>
             </div>
           </div>
           <div class="repro-step">
             <div class="repro-num">6</div>
             <div class="repro-body">
-              <h4>Evaluation</h4>
-              <pre><code>python evaluate.py \
-  --checkpoint checkpoints/attn_res_unet_best.pth \
-  --test_scenes data/scenes/scene_000 data/scenes/scene_001 data/scenes/scene_002</code></pre>
+              <h4>Inference &amp; Evaluation</h4>
+              <pre><code># Restore checkpoint from epoch 50 and run mixed precision inference
+python test.py \
+  --checkpoint checkpoints/attn_res_unet_epoch50.pth \
+  --batch_size 1 \
+  --amp \
+  --test_dir data/val_scenes \
+  --output_dir predictions/</code></pre>
             </div>
           </div>
         </div>

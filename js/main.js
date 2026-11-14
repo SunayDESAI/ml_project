@@ -53,19 +53,26 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 /* ─── 5. Model comparison chart (Chart.js) ─── */
-const models = ['CNN Baseline', 'U-Net', 'Residual U-Net', 'Attention U-Net', 'Attn-Res U-Net', 'Transformer'];
+const models = [
+  'Naïve Baseline',
+  'CNN',
+  'U-Net',
+  'Attention U-Net',
+  'Attn-Res U-Net (Paper ⭐)',
+  'Vision Transformer'
+];
 
 // ─── UPDATE THESE VALUES with your actual experiment results ───
 const data = {
   psnr: {
-    values:  [22.1, 25.4, 26.8, 27.3, 28.9, 27.5],  // placeholder dB values
+    values:  [18.5, 22.8, 25.4, 27.2, 28.9, 27.6],  // illustrative dB values
     label:   'PSNR (dB)',
     color:   'rgba(0, 212, 255, 0.85)',
     border:  'rgba(0, 212, 255, 1)',
     yLabel:  'PSNR (dB)',
   },
   ssim: {
-    values:  [0.61, 0.73, 0.77, 0.79, 0.84, 0.81],  // placeholder SSIM values
+    values:  [0.48, 0.63, 0.73, 0.79, 0.84, 0.80],  // illustrative SSIM values
     label:   'SSIM',
     color:   'rgba(124, 58, 237, 0.85)',
     border:  'rgba(124, 58, 237, 1)',
@@ -145,9 +152,9 @@ document.querySelectorAll('.chart-btn').forEach(btn => {
 // Place images in assets/results/<archname>.png  (or jpg/svg)
 // Keys must match the <option value="..."> in the HTML selects.
 const archImages = {
+  naive:       'assets/placeholder_gen.svg',
   cnn:         'assets/placeholder_gen.svg',
   unet:        'assets/placeholder_gen.svg',
-  resunet:     'assets/placeholder_gen.svg',
   attnunet:    'assets/placeholder_gen.svg',
   attnres:     'assets/placeholder_gen.svg',
   transformer: 'assets/placeholder_gen.svg',
@@ -155,21 +162,21 @@ const archImages = {
 
 // ─── UPDATE THESE with your real PSNR / SSIM per architecture ───
 const archMetrics = {
+  naive:       { psnr: '—', ssim: '—' },
   cnn:         { psnr: '—', ssim: '—' },
   unet:        { psnr: '—', ssim: '—' },
-  resunet:     { psnr: '—', ssim: '—' },
   attnunet:    { psnr: '—', ssim: '—' },
   attnres:     { psnr: '—', ssim: '—' },
   transformer: { psnr: '—', ssim: '—' },
 };
 
 const archLabels = {
-  cnn:         'CNN Baseline',
+  naive:       'Naïve Baseline',
+  cnn:         'CNN',
   unet:        'U-Net',
-  resunet:     'Residual U-Net',
   attnunet:    'Attention U-Net',
-  attnres:     'Attn-Res U-Net',
-  transformer: 'Transformer',
+  attnres:     'Attn-Res U-Net (Paper ⭐)',
+  transformer: 'Vision Transformer (Ext.)',
 };
 
 function updateCompare() {
