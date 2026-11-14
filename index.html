@@ -36,7 +36,6 @@
     <div class="hero-bg"></div>
     <div class="photon-particles" id="particles"></div>
     <div class="hero-content">
-      <div class="badge">🏆 Special Mention · CCD CVPR Workshop · June 2026</div>
       <h1>Single Photon<br/><span class="gradient-text">Image Reconstruction</span></h1>
       <p class="hero-sub">Recovering high-quality RGB images from sparse, noisy single-photon measurements using deep learning — U-Net, Attention, Residual, and Transformer architectures.</p>
       <div class="hero-stats">
@@ -118,7 +117,7 @@
       <div class="container">
         <div class="section-label">02 · Data Understanding</div>
         <h2 class="section-title">Dataset Overview</h2>
-        <p class="section-intro">We used the <strong>Single Photon Challenge dataset from Kaggle</strong>. It pairs sparse photon measurement arrays with clean ground-truth RGB images.</p>
+        <p class="section-intro">We used the <strong>Single Photon Challenge dataset</strong> from <a href="https://singlephotonchallenge.com" target="_blank" rel="noopener" style="color:var(--accent)">singlephotonchallenge.com</a>. It pairs sparse photon cubes (.npy) with clean ground-truth RGB images (.png), organized by scene and frame index.</p>
 
         <div class="data-grid">
           <div class="data-card">
@@ -128,24 +127,26 @@
               <div class="data-row"><span>Shape</span><code>(1024, 800, 100, 3)</code></div>
               <div class="data-row"><span>Frames</span><code>1024 temporal frames</code></div>
               <div class="data-row"><span>Spatial</span><code>800 × 800 pixels</code></div>
-              <div class="data-row"><span>Channels</span><code>100 × 3 (packed bits)</code></div>
+              <div class="data-row"><span>Channels</span><code>100 × 3 (width-wise bitpacked)</code></div>
             </div>
           </div>
           <div class="data-card">
             <div class="data-card-title">🖼 Ground Truth</div>
             <div class="data-card-body">
               <div class="data-row"><span>Format</span><code>.png</code></div>
+              <div class="data-row"><span>Naming</span><code>&lt;SCENE-NAME&gt;/&lt;FRAME-IDX&gt;.png</code></div>
               <div class="data-row"><span>Channels</span><code>RGB (3 channels)</code></div>
               <div class="data-row"><span>Resolution</span><code>800 × 800</code></div>
+              <div class="data-row"><span>Corresponds to</span><code>Last bitplane of paired .npy</code></div>
               <div class="data-row"><span>Pixel Range</span><code>[0, 255] → normalized [0,1]</code></div>
             </div>
           </div>
           <div class="data-card">
             <div class="data-card-title">🗂 Split</div>
             <div class="data-card-body">
-              <div class="data-row"><span>Total Scenes</span><code>50</code></div>
-              <div class="data-row"><span>Training</span><code>47 scenes</code></div>
-              <div class="data-row"><span>Test</span><code>3 scenes (scenes[0:3])</code></div>
+              <div class="data-row"><span>Official Train Set</span><code>50 simulated scenes (~425 GB)</code></div>
+              <div class="data-row"><span>Official Test Set</span><code>5 scenes (ground truth hidden)</code></div>
+              <div class="data-row"><span>Our local split</span><code>47 train / 3 val (from 50)</code></div>
               <div class="data-row"><span>Split Level</span><code>Scene-level (no leakage)</code></div>
             </div>
           </div>
@@ -462,10 +463,10 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
         <div class="eval-grid">
           <div class="eval-card">
             <h4>Split Strategy</h4>
-            <p>Scene-level train/test split: the 3 test scenes (<code>scenes[:3]</code>) were held out completely before any model selection or hyperparameter tuning. This prevents any information from test scenes leaking into training.</p>
+            <p>We carved a local validation split from the 50 available training scenes: the first 3 scenes (<code>scenes[:3]</code>) were held out before any model selection or hyperparameter tuning. The official challenge test set (5 separate hidden scenes) was never used during development.</p>
             <div class="split-bar">
               <div class="split-train">Train · 47 scenes (94%)</div>
-              <div class="split-test">Test · 3 (6%)</div>
+              <div class="split-test">Val · 3 (6%)</div>
             </div>
           </div>
           <div class="eval-card">
@@ -474,19 +475,24 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
               <div class="metric-item">
                 <div class="metric-name">PSNR</div>
                 <div class="metric-formula">10 · log₁₀(MAX² / MSE)</div>
-                <div class="metric-note">Higher is better. Sensitive to pixel-level errors. <code>skimage.metrics.peak_signal_noise_ratio</code></div>
+                <div class="metric-note">Higher is better. Standard pixel-level quality in dB. <code>skimage.metrics.peak_signal_noise_ratio</code></div>
               </div>
               <div class="metric-item">
-                <div class="metric-name">SSIM</div>
-                <div class="metric-formula">Structural Similarity Index</div>
-                <div class="metric-note">Range [−1, 1]; 1 = perfect. Captures luminance, contrast, structure. <code>torchmetrics.StructuralSimilarityIndexMeasure</code></div>
+                <div class="metric-name">MS-SSIM</div>
+                <div class="metric-formula">Multi-Scale Structural Similarity</div>
+                <div class="metric-note">Higher is better. The challenge uses MS-SSIM (multi-scale), not plain SSIM. <code>torchmetrics.MultiScaleStructuralSimilarityIndexMeasure</code></div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-name">LPIPS</div>
+                <div class="metric-formula">Learned Perceptual Image Patch Similarity</div>
+                <div class="metric-note">Lower is better. Measures perceptual similarity using deep features. Official challenge ranking metric alongside PSNR and MS-SSIM.</div>
               </div>
             </div>
           </div>
           <div class="eval-card">
             <h4>Why These Metrics?</h4>
-            <p>Pixel-level metrics alone (MSE) can miss perceptual quality. PSNR provides a standard dB-scale quality measure while SSIM captures structural fidelity that correlates better with human visual perception.</p>
-            <p style="margin-top:0.75rem;">VGG perceptual loss was used during training but PSNR + SSIM are reported for evaluation to remain comparable with challenge benchmarks.</p>
+            <p>Pixel-level metrics alone (MSE) can miss perceptual quality. The challenge officially ranks submissions on PSNR, MS-SSIM, and LPIPS — covering pixel accuracy, structural fidelity, and perceptual quality respectively. For each metric, mean and worst-case quantiles (5% and 1%) are reported to capture both average and tail performance.</p>
+            <p style="margin-top:0.75rem;">We additionally tracked plain SSIM locally for comparison, but MS-SSIM and LPIPS are the proper challenge-aligned metrics.</p>
           </div>
         </div>
       </div>
@@ -497,7 +503,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
       <div class="container">
         <div class="section-label">06 · Results</div>
         <h2 class="section-title">Model Comparison</h2>
-        <p class="section-intro">Compare all five architectures across PSNR and SSIM on the held-out test scenes. Values shown are illustrative placeholders — update with your actual numbers.</p>
+        <p class="section-intro">Compare all five architectures across PSNR, MS-SSIM, and LPIPS on our local held-out validation scenes. Values shown are illustrative placeholders — update with your actual numbers.</p>
 
         <!-- Interactive Chart -->
         <div class="chart-controls">
@@ -570,8 +576,8 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
               <tr>
                 <th>Architecture</th>
                 <th>PSNR ↑</th>
-                <th>SSIM ↑</th>
-                <th>Parameters</th>
+                <th>MS-SSIM ↑</th>
+                <th>LPIPS ↓</th>
                 <th>Notes</th>
               </tr>
             </thead>
@@ -580,42 +586,42 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                 <td>CNN Baseline</td>
                 <td>—</td>
                 <td>—</td>
-                <td>~5M</td>
+                <td>—</td>
                 <td>Lower bound</td>
               </tr>
               <tr>
                 <td>U-Net</td>
                 <td>—</td>
                 <td>—</td>
-                <td>~31M</td>
+                <td>—</td>
                 <td>Core architecture</td>
               </tr>
               <tr>
                 <td>Residual U-Net</td>
                 <td>—</td>
                 <td>—</td>
-                <td>~34M</td>
+                <td>—</td>
                 <td>Better gradient flow</td>
               </tr>
               <tr>
                 <td>Attention U-Net</td>
                 <td>—</td>
                 <td>—</td>
-                <td>~33M</td>
+                <td>—</td>
                 <td>Sparse-input focus</td>
               </tr>
               <tr class="best-row">
                 <td>Attn-Res U-Net ⭐</td>
                 <td>—</td>
                 <td>—</td>
-                <td>~36M</td>
+                <td>—</td>
                 <td>Best overall</td>
               </tr>
               <tr>
                 <td>Transformer</td>
                 <td>—</td>
                 <td>—</td>
-                <td>~45M</td>
+                <td>—</td>
                 <td>Global context</td>
               </tr>
             </tbody>
@@ -675,13 +681,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             <p>We demonstrated that deep learning — specifically U-Net-style encoder-decoder networks — can effectively reconstruct clean RGB images from extremely sparse single-photon measurements.</p>
             <p>The progressive architectural additions of <strong>skip connections → residual blocks → attention gates</strong> each contributed measurable improvements in PSNR and SSIM, with the combined Attention-Residual U-Net achieving the best reconstruction quality in our experiments.</p>
             <p>Composite loss functions (L1 + SSIM + VGG) consistently outperformed individual losses, confirming that pixel-level accuracy alone is insufficient for perceptually convincing reconstructions.</p>
-            <div class="conclusion-award">
-              <div class="award-icon">🏆</div>
-              <div>
-                <strong>Special Mention — Single Photon Challenge</strong>
-                <p>Announced at the CCD CVPR Workshop, June 3, 2026</p>
-              </div>
-            </div>
+
           </div>
           <div class="conclusion-takeaways">
             <h4>Key Takeaways</h4>
