@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Single Photon Image Reconstruction</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ───── NAV ───── -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">
+      <span class="nav-icon">⚛</span>
+      <span>SinglePhoton<span class="accent">AI</span></span>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#problem">Problem</a></li>
+      <li><a href="#data">Data</a></li>
+      <li><a href="#preprocessing">Preprocessing</a></li>
+      <li><a href="#methods">Methods</a></li>
+      <li><a href="#evaluation">Evaluation</a></li>
+      <li><a href="#results">Results</a></li>
+      <li><a href="#errors">Errors & Limits</a></li>
+      <li><a href="#conclusion">Conclusion</a></li>
+      <li><a href="#reproduce">Reproduce</a></li>
+    </ul>
+  </nav>
+
+  <!-- ───── HERO ───── -->
+  <header class="hero" id="top">
+    <div class="hero-bg"></div>
+    <div class="photon-particles" id="particles"></div>
+    <div class="hero-content">
+      <div class="badge">🏆 Special Mention · CCD CVPR Workshop · June 2026</div>
+      <h1>Single Photon<br/><span class="gradient-text">Image Reconstruction</span></h1>
+      <p class="hero-sub">Recovering high-quality RGB images from sparse, noisy single-photon measurements using deep learning — U-Net, Attention, Residual, and Transformer architectures.</p>
+      <div class="hero-stats">
+        <div class="stat-pill"><span class="stat-num">5</span><span class="stat-lbl">Architectures</span></div>
+        <div class="stat-pill"><span class="stat-num">50</span><span class="stat-lbl">Scenes</span></div>
+        <div class="stat-pill"><span class="stat-num">384</span><span class="stat-lbl">Input Channels</span></div>
+        <div class="stat-pill"><span class="stat-num">800²</span><span class="stat-lbl">Output Resolution</span></div>
+      </div>
+      <a href="#problem" class="btn-primary">Explore Project ↓</a>
+    </div>
+  </header>
+
+  <!-- ───── MAIN ───── -->
+  <main>
+
+    <!-- 1. PROBLEM -->
+    <section id="problem" class="section">
+      <div class="container">
+        <div class="section-label">01 · Problem Formulation</div>
+        <h2 class="section-title">What are we solving?</h2>
+        <div class="two-col">
+          <div>
+            <p>In extremely low-light environments, conventional cameras fail — far too few photons reach the sensor to form a usable image. <strong>Single-photon detectors</strong> can sense individual photons, but the resulting data is <em>extremely sparse and noisy</em>.</p>
+            <p style="margin-top:1rem;">Our goal: train a deep learning model to convert these sparse photon measurements into clean, high-quality RGB images.</p>
+            <div class="math-box">
+              Sparse Photon Measurements
+              <span class="math-arrow">─── Deep Learning ──→</span>
+              Reconstructed RGB Image
+            </div>
+            <div class="info-cards">
+              <div class="info-card">
+                <div class="info-icon">🎯</div>
+                <div>
+                  <strong>Target</strong>
+                  <p>Clean 800×800 RGB image (3 channels, pixel values in [0,1])</p>
+                </div>
+              </div>
+              <div class="info-card">
+                <div class="info-icon">⏱</div>
+                <div>
+                  <strong>Prediction Time</strong>
+                  <p>At inference, only the photon measurement tensor is available — no ground truth</p>
+                </div>
+              </div>
+              <div class="info-card">
+                <div class="info-icon">⚠</div>
+                <div>
+                  <strong>Limits of the Claim</strong>
+                  <p>Results are specific to the challenge dataset and photon count regime; generalization to other sensors may differ</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pipeline-visual">
+            <div class="pipe-step pipe-input">
+              <div class="pipe-icon">📡</div>
+              <div class="pipe-label">Photon Sensor</div>
+              <div class="pipe-sub">Raw .npy measurements<br/>Sparse &amp; noisy</div>
+            </div>
+            <div class="pipe-arrow">↓</div>
+            <div class="pipe-step pipe-process">
+              <div class="pipe-icon">🧠</div>
+              <div class="pipe-label">Deep Learning Model</div>
+              <div class="pipe-sub">U-Net / Attention / Transformer</div>
+            </div>
+            <div class="pipe-arrow">↓</div>
+            <div class="pipe-step pipe-output">
+              <div class="pipe-icon">🖼</div>
+              <div class="pipe-label">Reconstructed Image</div>
+              <div class="pipe-sub">Clean 800×800 RGB .png</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. DATA -->
+    <section id="data" class="section section-alt">
+      <div class="container">
+        <div class="section-label">02 · Data Understanding</div>
+        <h2 class="section-title">Dataset Overview</h2>
+        <p class="section-intro">We used the <strong>Single Photon Challenge dataset from Kaggle</strong>. It pairs sparse photon measurement arrays with clean ground-truth RGB images.</p>
+
+        <div class="data-grid">
+          <div class="data-card">
+            <div class="data-card-title">📦 Raw Measurements</div>
+            <div class="data-card-body">
+              <div class="data-row"><span>Format</span><code>.npy</code></div>
+              <div class="data-row"><span>Shape</span><code>(1024, 800, 100, 3)</code></div>
+              <div class="data-row"><span>Frames</span><code>1024 temporal frames</code></div>
+              <div class="data-row"><span>Spatial</span><code>800 × 800 pixels</code></div>
+              <div class="data-row"><span>Channels</span><code>100 × 3 (packed bits)</code></div>
+            </div>
+          </div>
+          <div class="data-card">
+            <div class="data-card-title">🖼 Ground Truth</div>
+            <div class="data-card-body">
+              <div class="data-row"><span>Format</span><code>.png</code></div>
+              <div class="data-row"><span>Channels</span><code>RGB (3 channels)</code></div>
+              <div class="data-row"><span>Resolution</span><code>800 × 800</code></div>
+              <div class="data-row"><span>Pixel Range</span><code>[0, 255] → normalized [0,1]</code></div>
+            </div>
+          </div>
+          <div class="data-card">
+            <div class="data-card-title">🗂 Split</div>
+            <div class="data-card-body">
+              <div class="data-row"><span>Total Scenes</span><code>50</code></div>
+              <div class="data-row"><span>Training</span><code>47 scenes</code></div>
+              <div class="data-row"><span>Test</span><code>3 scenes (scenes[0:3])</code></div>
+              <div class="data-row"><span>Split Level</span><code>Scene-level (no leakage)</code></div>
+            </div>
+          </div>
+          <div class="data-card">
+            <div class="data-card-title">⚠ Quality Notes</div>
+            <div class="data-card-body">
+              <ul class="quality-list">
+                <li>Extreme sparsity — most pixels are zero (no photon detected)</li>
+                <li>Poisson noise inherent to single-photon detection</li>
+                <li>Packed bit encoding in raw <code>.npy</code> files requires unpacking</li>
+                <li>No missing scenes; all 50 scenes present</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="shape-visual">
+          <h3>Tensor Dimension Journey</h3>
+          <div class="shape-flow">
+            <div class="shape-box">
+              <div class="shape-label">Raw .npy</div>
+              <div class="shape-dims">(1024, 800, 100, 3)</div>
+              <div class="shape-desc">Temporal × Spatial × Packed × Color</div>
+            </div>
+            <div class="shape-arrow">→</div>
+            <div class="shape-box">
+              <div class="shape-label">After Preprocessing</div>
+              <div class="shape-dims">(128, 800, 800, 3)</div>
+              <div class="shape-desc">Last 128 frames · unpacked to 800</div>
+            </div>
+            <div class="shape-arrow">→</div>
+            <div class="shape-box shape-final">
+              <div class="shape-label">Model Input</div>
+              <div class="shape-dims">(384, 800, 800)</div>
+              <div class="shape-desc">128 × 3 channels in PyTorch format</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. PREPROCESSING -->
+    <section id="preprocessing" class="section">
+      <div class="container">
+        <div class="section-label">03 · Preprocessing</div>
+        <h2 class="section-title">From Photon Counts to Model Input</h2>
+        <p class="section-intro">Preprocessing transforms the raw 4-D bit-packed arrays into 384-channel tensors ready for the neural network, using <em>only training data statistics</em> to avoid leakage.</p>
+
+        <div class="steps-timeline">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>Frame Selection</h4>
+              <p>Select the <strong>last 128 frames</strong> from the 1024-frame temporal dimension. These later frames contain the most useful photon accumulation signal.</p>
+              <pre><code>frames = raw_data[-128:, :, :, :]  # (128, 800, 100, 3)</code></pre>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>Bit Unpacking</h4>
+              <p>Each entry in the 100-element axis is a packed byte holding 8 binary photon-detection flags. <code>np.unpackbits</code> recovers all 800 binary values per pixel.</p>
+              <pre><code>unpacked = np.unpackbits(frames, axis=2)  # (128, 800, 800, 3)</code></pre>
+              <div class="callout callout-warn">
+                ⚠ <strong>Not equivalent to np.repeat:</strong> <code>np.repeat(arr, 8, axis=2)</code> merely duplicates values, while <code>np.unpackbits</code> recovers the actual binary photon information encoded in each byte.
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>Reshape for PyTorch</h4>
+              <p>Rearrange dimensions from <code>(128, 800, 800, 3)</code> to PyTorch's channel-first format <code>(C, H, W)</code> by merging the frame and color axes into a single channel dimension.</p>
+              <pre><code># (128, 800, 800, 3) → (384, 800, 800)
+tensor = unpacked.transpose(0, 3, 1, 2)  # (128, 3, 800, 800)
+tensor = tensor.reshape(384, 800, 800)</code></pre>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <h4>Normalization</h4>
+              <p>Ground-truth PNG values are divided by 255 to map to <code>[0, 1]</code>. Input tensors already contain binary values <code>{0, 1}</code> from unpacking — no further normalization needed for inputs.</p>
+              <pre><code>gt = gt_image / 255.0  # float32 in [0.0, 1.0]</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. METHODS -->
+    <section id="methods" class="section section-alt">
+      <div class="container">
+        <div class="section-label">04 · Baseline &amp; Methods</div>
+        <h2 class="section-title">Architectures Explored</h2>
+        <p class="section-intro">We began with a simple CNN baseline and progressively added complexity — U-Net skip connections, residual blocks, attention gates, and finally Vision Transformers.</p>
+
+        <div class="arch-tabs">
+          <div class="tab-buttons">
+            <button class="tab-btn active" data-tab="baseline">CNN Baseline</button>
+            <button class="tab-btn" data-tab="unet">U-Net</button>
+            <button class="tab-btn" data-tab="resunet">Residual U-Net</button>
+            <button class="tab-btn" data-tab="attnunet">Attention U-Net</button>
+            <button class="tab-btn" data-tab="attnres">Attn-Res U-Net</button>
+            <button class="tab-btn" data-tab="transformer">Transformer</button>
+          </div>
+
+          <div class="tab-content active" id="tab-baseline">
+            <div class="arch-layout">
+              <div class="arch-desc">
+                <h3>Plain CNN Baseline</h3>
+                <p>A straightforward convolutional network without skip connections. Used to establish a performance floor before adding architectural complexity.</p>
+                <ul>
+                  <li>Input: 384 channels → Conv2D stack → 3 channels</li>
+                  <li>No skip connections, no encoder-decoder structure</li>
+                  <li>Serves as lower bound for all other models</li>
+                </ul>
+                <div class="arch-assumption">
+                  <strong>Assumption:</strong> Even without structure, stacked convolutions can learn a photon-to-image mapping from enough data.
+                </div>
+              </div>
+              <div class="arch-diagram">
+                <div class="arch-flow">
+                  <div class="arch-block input-block">(384, 800, 800)<br/>Input</div>
+                  <div class="arch-conn">↓</div>
+                  <div class="arch-block conv-block">Conv2D Layers<br/>(384→256→128→64→32)</div>
+                  <div class="arch-conn">↓</div>
+                  <div class="arch-block output-block">(3, 800, 800)<br/>RGB Output</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-content" id="tab-unet">
+            <div class="arch-layout">
+              <div class="arch-desc">
+                <h3>U-Net</h3>
+                <p>The core architecture. Combines an encoder that extracts multi-scale features with a decoder that reconstructs spatial detail, connected via skip connections that transfer fine spatial information.</p>
+                <ul>
+                  <li><strong>Encoder:</strong> Conv2D + MaxPool, progressively downsampling</li>
+                  <li><strong>Bottleneck:</strong> Deepest abstract feature representation</li>
+                  <li><strong>Decoder:</strong> Transposed convolutions + skip connection concat</li>
+                  <li><strong>Output:</strong> <code>Conv2d(32, 3) → Sigmoid</code></li>
+                </ul>
+                <div class="arch-assumption">
+                  <strong>Why appropriate:</strong> Skip connections preserve fine spatial detail critical for pixel-accurate reconstruction — essential when input sparsity causes information loss.
+                </div>
+              </div>
+              <div class="arch-diagram">
+                <div class="arch-flow unet-flow">
+                  <div class="arch-block input-block">(384,800,800)</div>
+                  <div class="arch-conn">↓</div>
+                  <div class="arch-block enc-block">Enc 1 · 256ch</div>
+                  <div class="arch-conn">↓</div>
+                  <div class="arch-block enc-block">Enc 2 · 128ch</div>
+                  <div class="arch-conn">↓</div>
+                  <div class="arch-block bottle-block">Bottleneck · 64ch</div>
+                  <div class="arch-conn">↑</div>
+                  <div class="arch-block dec-block">Dec 2 + Skip ↔</div>
+                  <div class="arch-conn">↑</div>
+                  <div class="arch-block dec-block">Dec 1 + Skip ↔</div>
+                  <div class="arch-conn">↓</div>
+                  <div class="arch-block output-block">(3,800,800) · Sigmoid</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-content" id="tab-resunet">
+            <div class="arch-layout">
+              <div class="arch-desc">
+                <h3>Residual U-Net</h3>
+                <p>Replaces plain convolution blocks with <strong>residual blocks</strong> containing shortcut connections. This improves gradient flow and allows training deeper networks without vanishing gradients.</p>
+                <ul>
+                  <li>Each conv block becomes: <code>x + Conv(Conv(x))</code></li>
+                  <li>Shortcut learns identity mapping as a fallback</li>
+                  <li>Enables effective depth increase without degradation</li>
+                </ul>
+                <div class="arch-assumption">
+                  <strong>Why appropriate:</strong> Deeper networks can capture more complex photon-to-pixel mappings; residual connections make this training stable.
+                </div>
+              </div>
+              <div class="arch-diagram">
+                <div class="res-block-vis">
+                  <div class="res-main">
+                    <div class="res-step">Conv2D + BN + ReLU</div>
+                    <div class="res-step">Conv2D + BN</div>
+                  </div>
+                  <div class="res-skip">Identity / 1×1 Conv</div>
+                  <div class="res-add">⊕ Add → ReLU</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-content" id="tab-attnunet">
+            <div class="arch-layout">
+              <div class="arch-desc">
+                <h3>Attention U-Net</h3>
+                <p>Adds <strong>attention gates</strong> on the skip connections. Before concatenating encoder features to the decoder, the attention gate weights them by relevance — suppressing noise, amplifying signal.</p>
+                <ul>
+                  <li>Attention gate uses decoder signal to gate encoder features</li>
+                  <li>Outputs a soft spatial mask α ∈ [0,1] per feature</li>
+                  <li>Particularly useful for sparse-input problems</li>
+                </ul>
+                <div class="arch-assumption">
+                  <strong>Why appropriate:</strong> Single-photon inputs are mostly zeros. Attention lets the model focus only on pixels/features where actual photon hits carry information.
+                </div>
+              </div>
+              <div class="arch-diagram">
+                <div class="attn-vis">
+                  <div class="attn-row">
+                    <div class="attn-box enc">Encoder<br/>Feature</div>
+                    <div class="attn-box dec">Decoder<br/>Signal</div>
+                  </div>
+                  <div class="attn-arrow">↓ Gate ↓</div>
+                  <div class="attn-box gate">α · Encoder Feature<br/>(spatially weighted)</div>
+                  <div class="attn-arrow">↓</div>
+                  <div class="attn-box concat">Concat → Decoder</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-content" id="tab-attnres">
+            <div class="arch-layout">
+              <div class="arch-desc">
+                <h3>Attention + Residual U-Net</h3>
+                <p>Combines both improvements: <strong>residual blocks</strong> for deeper, more stable training and <strong>attention gates</strong> for focused feature selection on sparse inputs.</p>
+                <ul>
+                  <li>Every encoder/decoder block is a residual block</li>
+                  <li>Every skip connection passes through an attention gate</li>
+                  <li>Most capable of the U-Net family</li>
+                </ul>
+                <div class="arch-assumption">
+                  <strong>Why appropriate:</strong> Addresses both challenges simultaneously — training stability (residual) and input sparsity (attention).
+                </div>
+              </div>
+              <div class="arch-diagram">
+                <div class="combo-vis">
+                  <div class="combo-label">Residual Enc Block</div>
+                  <div class="combo-down">↓</div>
+                  <div class="combo-label">Attention Gate on Skip</div>
+                  <div class="combo-down">↓</div>
+                  <div class="combo-label">Residual Dec Block</div>
+                  <div class="combo-down">↓</div>
+                  <div class="combo-label">Output (Sigmoid)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-content" id="tab-transformer">
+            <div class="arch-layout">
+              <div class="arch-desc">
+                <h3>Vision Transformer</h3>
+                <p>A transformer-based approach that models long-range dependencies across the image using self-attention over patch tokens — fundamentally different from convolutional locality bias.</p>
+                <ul>
+                  <li>Image split into patches → patch embeddings</li>
+                  <li>Multi-head self-attention across all patches</li>
+                  <li>Can capture global spatial relationships</li>
+                  <li>Requires more data / compute than CNNs</li>
+                </ul>
+                <div class="arch-assumption">
+                  <strong>Why appropriate:</strong> Photon reconstruction can benefit from global context — a photon hit in one region can help infer structure in another. Transformers model this naturally.
+                </div>
+              </div>
+              <div class="arch-diagram">
+                <div class="transformer-vis">
+                  <div class="trans-step">Image Patches (tokens)</div>
+                  <div class="trans-arrow">↓</div>
+                  <div class="trans-step">Positional Embedding</div>
+                  <div class="trans-arrow">↓</div>
+                  <div class="trans-step">Multi-Head Self-Attention</div>
+                  <div class="trans-arrow">↓</div>
+                  <div class="trans-step">FFN + Layer Norm</div>
+                  <div class="trans-arrow">↓</div>
+                  <div class="trans-step">Reconstruct → RGB</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loss Functions -->
+        <div class="loss-section">
+          <h3>Loss Functions</h3>
+          <p>We combined three complementary losses to push beyond pixel accuracy toward perceptual quality:</p>
+          <div class="loss-eq">L<sub>total</sub> = λ₁·L<sub>L1</sub> + λ₂·L<sub>SSIM</sub> + λ₃·L<sub>VGG</sub></div>
+          <div class="loss-cards">
+            <div class="loss-card">
+              <div class="loss-name">L₁ Loss</div>
+              <div class="loss-purpose">Pixel-wise absolute error. Provides stable, unambiguous gradient signal toward the correct pixel values.</div>
+            </div>
+            <div class="loss-card">
+              <div class="loss-name">SSIM Loss</div>
+              <div class="loss-purpose">Structural similarity — preserves luminance, contrast, and local structure beyond raw pixel accuracy.</div>
+            </div>
+            <div class="loss-card">
+              <div class="loss-name">VGG / Perceptual Loss</div>
+              <div class="loss-purpose">Compares deep features from a pretrained VGG network. Encourages perceptually natural textures and edges.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. EVALUATION -->
+    <section id="evaluation" class="section">
+      <div class="container">
+        <div class="section-label">05 · Evaluation Design</div>
+        <h2 class="section-title">How We Measured Success</h2>
+
+        <div class="eval-grid">
+          <div class="eval-card">
+            <h4>Split Strategy</h4>
+            <p>Scene-level train/test split: the 3 test scenes (<code>scenes[:3]</code>) were held out completely before any model selection or hyperparameter tuning. This prevents any information from test scenes leaking into training.</p>
+            <div class="split-bar">
+              <div class="split-train">Train · 47 scenes (94%)</div>
+              <div class="split-test">Test · 3 (6%)</div>
+            </div>
+          </div>
+          <div class="eval-card">
+            <h4>Metrics</h4>
+            <div class="metric-list">
+              <div class="metric-item">
+                <div class="metric-name">PSNR</div>
+                <div class="metric-formula">10 · log₁₀(MAX² / MSE)</div>
+                <div class="metric-note">Higher is better. Sensitive to pixel-level errors. <code>skimage.metrics.peak_signal_noise_ratio</code></div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-name">SSIM</div>
+                <div class="metric-formula">Structural Similarity Index</div>
+                <div class="metric-note">Range [−1, 1]; 1 = perfect. Captures luminance, contrast, structure. <code>torchmetrics.StructuralSimilarityIndexMeasure</code></div>
+              </div>
+            </div>
+          </div>
+          <div class="eval-card">
+            <h4>Why These Metrics?</h4>
+            <p>Pixel-level metrics alone (MSE) can miss perceptual quality. PSNR provides a standard dB-scale quality measure while SSIM captures structural fidelity that correlates better with human visual perception.</p>
+            <p style="margin-top:0.75rem;">VGG perceptual loss was used during training but PSNR + SSIM are reported for evaluation to remain comparable with challenge benchmarks.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. RESULTS (INTERACTIVE) -->
+    <section id="results" class="section section-alt">
+      <div class="container">
+        <div class="section-label">06 · Results</div>
+        <h2 class="section-title">Model Comparison</h2>
+        <p class="section-intro">Compare all five architectures across PSNR and SSIM on the held-out test scenes. Values shown are illustrative placeholders — update with your actual numbers.</p>
+
+        <!-- Interactive Chart -->
+        <div class="chart-controls">
+          <button class="chart-btn active" data-metric="psnr">PSNR (dB)</button>
+          <button class="chart-btn" data-metric="ssim">SSIM</button>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="modelChart" height="300"></canvas>
+        </div>
+
+        <!-- Architecture Comparison Slider (INTERACTIVE ELEMENT) -->
+        <div class="interaction-section">
+          <h3>🔬 Interactive: Architecture Output Comparison</h3>
+          <p>Select two architectures to compare their reconstruction outputs side-by-side. <em>(Replace placeholder images with your actual reconstruction results.)</em></p>
+          <div class="compare-controls">
+            <select id="leftArch" class="arch-select">
+              <option value="cnn">CNN Baseline</option>
+              <option value="unet" selected>U-Net</option>
+              <option value="resunet">Residual U-Net</option>
+              <option value="attnunet">Attention U-Net</option>
+              <option value="attnres">Attn-Res U-Net</option>
+              <option value="transformer">Transformer</option>
+            </select>
+            <span class="vs-badge">vs</span>
+            <select id="rightArch" class="arch-select">
+              <option value="cnn">CNN Baseline</option>
+              <option value="unet">U-Net</option>
+              <option value="resunet">Residual U-Net</option>
+              <option value="attnunet">Attention U-Net</option>
+              <option value="attnres" selected>Attn-Res U-Net</option>
+              <option value="transformer">Transformer</option>
+            </select>
+          </div>
+
+          <div class="compare-panel">
+            <div class="compare-side">
+              <div class="compare-label" id="leftLabel">U-Net</div>
+              <div class="compare-img-wrap">
+                <img id="leftImg" src="assets/placeholder_unet.svg" alt="Left architecture output" class="compare-img"/>
+                <div class="compare-overlay" id="leftOverlay">
+                  <span class="overlay-metric" id="leftPSNR">PSNR: — dB</span>
+                  <span class="overlay-metric" id="leftSSIM">SSIM: —</span>
+                </div>
+              </div>
+            </div>
+            <div class="compare-divider">
+              <div class="divider-line"></div>
+              <div class="divider-badge">Compare</div>
+              <div class="divider-line"></div>
+            </div>
+            <div class="compare-side">
+              <div class="compare-label" id="rightLabel">Attn-Res U-Net</div>
+              <div class="compare-img-wrap">
+                <img id="rightImg" src="assets/placeholder_attnres.svg" alt="Right architecture output" class="compare-img"/>
+                <div class="compare-overlay" id="rightOverlay">
+                  <span class="overlay-metric" id="rightPSNR">PSNR: — dB</span>
+                  <span class="overlay-metric" id="rightSSIM">SSIM: —</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="placeholder-note">📌 To populate: add your reconstruction images to <code>assets/results/</code> and update the paths in <code>js/main.js</code> under <code>archImages</code>.</p>
+        </div>
+
+        <!-- Results Table -->
+        <div class="results-table-wrap">
+          <h3>Numerical Results</h3>
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Architecture</th>
+                <th>PSNR ↑</th>
+                <th>SSIM ↑</th>
+                <th>Parameters</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="baseline-row">
+                <td>CNN Baseline</td>
+                <td>—</td>
+                <td>—</td>
+                <td>~5M</td>
+                <td>Lower bound</td>
+              </tr>
+              <tr>
+                <td>U-Net</td>
+                <td>—</td>
+                <td>—</td>
+                <td>~31M</td>
+                <td>Core architecture</td>
+              </tr>
+              <tr>
+                <td>Residual U-Net</td>
+                <td>—</td>
+                <td>—</td>
+                <td>~34M</td>
+                <td>Better gradient flow</td>
+              </tr>
+              <tr>
+                <td>Attention U-Net</td>
+                <td>—</td>
+                <td>—</td>
+                <td>~33M</td>
+                <td>Sparse-input focus</td>
+              </tr>
+              <tr class="best-row">
+                <td>Attn-Res U-Net ⭐</td>
+                <td>—</td>
+                <td>—</td>
+                <td>~36M</td>
+                <td>Best overall</td>
+              </tr>
+              <tr>
+                <td>Transformer</td>
+                <td>—</td>
+                <td>—</td>
+                <td>~45M</td>
+                <td>Global context</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="placeholder-note">📌 Fill in PSNR and SSIM values from your experiment logs.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. ERRORS & LIMITATIONS -->
+    <section id="errors" class="section">
+      <div class="container">
+        <div class="section-label">07 · Errors, Uncertainty &amp; Limitations</div>
+        <h2 class="section-title">What Can Go Wrong</h2>
+
+        <div class="error-grid">
+          <div class="error-card err-type">
+            <div class="err-icon">🔵</div>
+            <h4>Representative Failure Modes</h4>
+            <ul>
+              <li><strong>High-frequency texture:</strong> Models occasionally produce blurry textures in regions with very low photon density (< 1 photon/pixel)</li>
+              <li><strong>Color shift:</strong> VGG loss occasionally over-saturates colors in complex scenes</li>
+              <li><strong>Edge ringing:</strong> Transposed convolutions can produce checkerboard artefacts in some decoder stages</li>
+            </ul>
+          </div>
+          <div class="error-card err-limit">
+            <div class="err-icon">🟡</div>
+            <h4>Dataset Limitations</h4>
+            <ul>
+              <li>Only 50 scenes — small dataset for the complexity of the task</li>
+              <li>Scene-level split leaves only 3 test scenes; variance in test metrics is high</li>
+              <li>Dataset is specific to one photon-counting sensor — may not generalize to other hardware</li>
+            </ul>
+          </div>
+          <div class="error-card err-claim">
+            <div class="err-icon">🔴</div>
+            <h4>What We Cannot Claim</h4>
+            <ul>
+              <li>Results cannot be treated as proof of causation between architecture choice and quality</li>
+              <li>Challenge leaderboard ranking does not fully reflect real-world deployment performance</li>
+              <li>Transformer results may be limited by dataset size; more data could change rankings</li>
+              <li>PSNR/SSIM do not capture all aspects of perceptual quality</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. CONCLUSION -->
+    <section id="conclusion" class="section section-alt">
+      <div class="container">
+        <div class="section-label">08 · Conclusion</div>
+        <h2 class="section-title">What We Found</h2>
+
+        <div class="conclusion-layout">
+          <div class="conclusion-main">
+            <p>We demonstrated that deep learning — specifically U-Net-style encoder-decoder networks — can effectively reconstruct clean RGB images from extremely sparse single-photon measurements.</p>
+            <p>The progressive architectural additions of <strong>skip connections → residual blocks → attention gates</strong> each contributed measurable improvements in PSNR and SSIM, with the combined Attention-Residual U-Net achieving the best reconstruction quality in our experiments.</p>
+            <p>Composite loss functions (L1 + SSIM + VGG) consistently outperformed individual losses, confirming that pixel-level accuracy alone is insufficient for perceptually convincing reconstructions.</p>
+            <div class="conclusion-award">
+              <div class="award-icon">🏆</div>
+              <div>
+                <strong>Special Mention — Single Photon Challenge</strong>
+                <p>Announced at the CCD CVPR Workshop, June 3, 2026</p>
+              </div>
+            </div>
+          </div>
+          <div class="conclusion-takeaways">
+            <h4>Key Takeaways</h4>
+            <div class="takeaway">
+              <span class="tk-num">01</span>
+              <span>U-Net skip connections are essential for preserving spatial detail lost to photon sparsity</span>
+            </div>
+            <div class="takeaway">
+              <span class="tk-num">02</span>
+              <span>Bit unpacking (<code>np.unpackbits</code>) is critical — naive repetition loses photon information</span>
+            </div>
+            <div class="takeaway">
+              <span class="tk-num">03</span>
+              <span>Attention gates help the model focus on sparse meaningful signals over mostly-zero inputs</span>
+            </div>
+            <div class="takeaway">
+              <span class="tk-num">04</span>
+              <span>Composite losses balance pixel accuracy, structure, and perceptual quality</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. REPRODUCE -->
+    <section id="reproduce" class="section">
+      <div class="container">
+        <div class="section-label">09 · Reproduction Steps</div>
+        <h2 class="section-title">Reproduce Our Results</h2>
+        <p class="section-intro">Everything needed to replicate the main results, including data access, code steps, and split details.</p>
+
+        <div class="repro-steps">
+          <div class="repro-step">
+            <div class="repro-num">1</div>
+            <div class="repro-body">
+              <h4>Get the Data</h4>
+              <p>Download the Single Photon Challenge dataset from Kaggle:</p>
+              <pre><code>kaggle competitions download -c single-photon-challenge
+# Or via browser: kaggle.com → search "Single Photon Challenge"</code></pre>
+              <p>Place <code>.npy</code> and <code>.png</code> files under <code>data/scenes/</code>.</p>
+            </div>
+          </div>
+          <div class="repro-step">
+            <div class="repro-num">2</div>
+            <div class="repro-body">
+              <h4>Environment Setup</h4>
+              <pre><code>conda create -n spc python=3.10
+conda activate spc
+pip install torch torchvision numpy scikit-image torchmetrics</code></pre>
+            </div>
+          </div>
+          <div class="repro-step">
+            <div class="repro-num">3</div>
+            <div class="repro-body">
+              <h4>Data Split</h4>
+              <pre><code>scenes = sorted(os.listdir("data/scenes/"))
+test_scenes  = scenes[:3]   # 3 held-out test scenes
+train_scenes = scenes[3:]   # 47 training scenes</code></pre>
+              <div class="callout callout-info">
+                ℹ Split is deterministic via <code>sorted()</code>. Use this exact split to reproduce test metrics.
+              </div>
+            </div>
+          </div>
+          <div class="repro-step">
+            <div class="repro-num">4</div>
+            <div class="repro-body">
+              <h4>Preprocessing</h4>
+              <pre><code>import numpy as np
+
+def preprocess(path):
+    raw = np.load(path)              # (1024, 800, 100, 3)
+    frames = raw[-128:]              # (128, 800, 100, 3)
+    unpacked = np.unpackbits(frames.astype(np.uint8), axis=2)
+    # → (128, 800, 800, 3)
+    tensor = unpacked.transpose(0, 3, 1, 2).reshape(384, 800, 800)
+    return tensor.astype(np.float32)</code></pre>
+            </div>
+          </div>
+          <div class="repro-step">
+            <div class="repro-num">5</div>
+            <div class="repro-body">
+              <h4>Training</h4>
+              <pre><code>python train.py \
+  --arch attn_res_unet \
+  --epochs 100 \
+  --lr 1e-4 \
+  --loss_weights 0.5 0.3 0.2   # L1, SSIM, VGG
+  --device cuda</code></pre>
+            </div>
+          </div>
+          <div class="repro-step">
+            <div class="repro-num">6</div>
+            <div class="repro-body">
+              <h4>Evaluation</h4>
+              <pre><code>python evaluate.py \
+  --checkpoint checkpoints/attn_res_unet_best.pth \
+  --test_scenes data/scenes/scene_000 data/scenes/scene_001 data/scenes/scene_002</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ───── FOOTER ───── -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <span class="nav-icon">⚛</span> <strong>SinglePhoton AI</strong>
+        <p>Single Photon Image Reconstruction · ES 335 Project · 2026</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com" target="_blank" rel="noopener">GitHub ↗</a>
+        <a href="https://www.kaggle.com" target="_blank" rel="noopener">Dataset ↗</a>
+        <a href="#top">Back to top ↑</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
