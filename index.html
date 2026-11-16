@@ -258,24 +258,28 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
           <div class="tab-content" id="tab-naive">
             <div class="arch-layout">
               <div class="arch-desc">
-                <h3>Naïve Statistical Baseline</h3>
-                <p>Early photon-limited imaging relies on statistical reconstruction techniques such as Poisson denoising and temporal frame averaging, modeling photon arrivals as an inhomogeneous Poisson process.</p>
+                <h3>Naïve Sum Baseline (256 Frames)</h3>
+                <p>Early photon-limited imaging relies on statistical reconstruction techniques such as temporal frame averaging and sensor response inversion. In our evaluation, we implemented the <strong>Naïve Sum baseline</strong> using 256 accumulated frames.</p>
                 <ul>
-                  <li>Direct temporal averaging across accumulated photon frames</li>
-                  <li>No learned feature representations or structural priors</li>
-                  <li>Serves as the empirical floor for image reconstruction</li>
+                  <li><strong>Frame Accumulation:</strong> Selects the last 256 temporal frames (<code>batch_size = 256</code>) and uncompresses bits: <code>pc = np.unpackbits(pc[-256:], axis=2)</code>.</li>
+                  <li><strong>Normalized Average:</strong> Computes the mean photon intensity: <code>im = pc.sum(axis=0) / 256</code>.</li>
+                  <li><strong>Camera Response Inversion:</strong> Converts single-photon camera counts to linear RGB via <code>spc_avg_to_rgb(im, factor=0.5)</code> from <code>visionsim.emulate.spc</code>.</li>
+                  <li><strong>Tonemapping:</strong> Maps linear RGB to display sRGB color space via <code>linearrgb_to_srgb(im)</code> from <code>visionsim.utils.color</code>.</li>
+                  <li><strong>Benchmark Score:</strong> Achieves an <strong>Average PSNR of 20.955 dB</strong> and <strong>SSIM of 0.2924</strong> across the 3 test scenes.</li>
                 </ul>
                 <div class="arch-assumption">
-                  <strong>Limitation:</strong> Under extreme low-light regimes with high sparsity, statistical averaging generates heavily oversmoothed images devoid of high-frequency edges and texture detail.
+                  <strong>Empirical Floor:</strong> While simple and fast, statistical averaging cannot resolve high-frequency textures or cancel Poisson noise under extreme photon scarcity, producing severe noise speckle and low structural fidelity (SSIM ~ 0.29).
                 </div>
               </div>
               <div class="arch-diagram">
                 <div class="arch-flow">
-                  <div class="arch-block input-block">(128, 800, 800, 3)<br/>Raw Bitplanes</div>
+                  <div class="arch-block input-block">(256, 800, 100, 3)<br/>Raw .npy measurements</div>
                   <div class="arch-conn">↓</div>
-                  <div class="arch-block conv-block">Temporal Frame Averaging<br/>&amp; Poisson Denoising Filter</div>
+                  <div class="arch-block conv-block">np.unpackbits &rarr; (256, 800, 800, 3)<br/>pc.sum(axis=0) / 256</div>
                   <div class="arch-conn">↓</div>
-                  <div class="arch-block output-block">(3, 800, 800)<br/>Smoothed Output</div>
+                  <div class="arch-block conv-block">spc_avg_to_rgb(im, factor=0.5)<br/>linearrgb_to_srgb(im) tonemapping</div>
+                  <div class="arch-conn">↓</div>
+                  <div class="arch-block output-block">Reconstructed RGB (3, 800, 800)<br/>PSNR: 20.95 dB | SSIM: 0.2924</div>
                 </div>
               </div>
             </div>
@@ -556,36 +560,48 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
 
         <!-- Architecture Comparison Slider (INTERACTIVE ELEMENT) -->
         <div class="interaction-section">
-          <h3>🔬 Interactive: Architecture Output Comparison</h3>
-          <p>Select two architectures to compare their reconstruction outputs side-by-side. <em>(Replace placeholder images with your actual reconstruction results.)</em></p>
+          <h3>🔬 Interactive: Output Inspection &amp; Model Comparison</h3>
+          <p>Inspect and compare model reconstructions against the clean Ground Truth across the three held-out test scenes (<code>attic</code>, <code>bachelors-quarters</code>, <code>barbershop</code>). Ground Truth and Naïve Sum are loaded from our actual Kaggle test evaluation!</p>
+          
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.25rem; flex-wrap:wrap;">
+            <label for="sceneSelect" style="font-weight:600; font-size:0.9rem; color:var(--accent);">Select Held-out Test Scene:</label>
+            <select id="sceneSelect" class="arch-select" style="min-width:260px;">
+              <option value="attic" selected>Scene 1: attic (PSNR: 21.769 dB, SSIM: 0.3077)</option>
+              <option value="bachelors">Scene 2: bachelors-quarters (PSNR: 22.152 dB, SSIM: 0.2611)</option>
+              <option value="barbershop">Scene 3: barbershop (PSNR: 18.943 dB, SSIM: 0.3085)</option>
+            </select>
+          </div>
+
           <div class="compare-controls">
             <select id="leftArch" class="arch-select">
-              <option value="naive">Naïve Baseline</option>
-              <option value="cnn">CNN</option>
-              <option value="unet" selected>U-Net</option>
-              <option value="attnunet">Attention U-Net</option>
-              <option value="attnres">Attn-Res U-Net (Paper ⭐)</option>
-              <option value="transformer">Transformer (Ext.)</option>
-            </select>
-            <span class="vs-badge">vs</span>
-            <select id="rightArch" class="arch-select">
-              <option value="naive">Naïve Baseline</option>
+              <option value="gt" selected>Ground Truth (Clean PNG)</option>
+              <option value="naive">Naïve Sum (256 frames)</option>
               <option value="cnn">CNN</option>
               <option value="unet">U-Net</option>
               <option value="attnunet">Attention U-Net</option>
-              <option value="attnres" selected>Attn-Res U-Net (Paper ⭐)</option>
-              <option value="transformer">Transformer (Ext.)</option>
+              <option value="attnres">Attn-Res U-Net (Paper ⭐)</option>
+              <option value="transformer">Vision Transformer (Ext.)</option>
+            </select>
+            <span class="vs-badge">vs</span>
+            <select id="rightArch" class="arch-select">
+              <option value="gt">Ground Truth (Clean PNG)</option>
+              <option value="naive" selected>Naïve Sum (256 frames)</option>
+              <option value="cnn">CNN</option>
+              <option value="unet">U-Net</option>
+              <option value="attnunet">Attention U-Net</option>
+              <option value="attnres">Attn-Res U-Net (Paper ⭐)</option>
+              <option value="transformer">Vision Transformer (Ext.)</option>
             </select>
           </div>
 
           <div class="compare-panel">
             <div class="compare-side">
-              <div class="compare-label" id="leftLabel">U-Net</div>
+              <div class="compare-label" id="leftLabel">Ground Truth (Clean PNG)</div>
               <div class="compare-img-wrap">
-                <img id="leftImg" src="assets/placeholder_gen.svg" alt="Left architecture output" class="compare-img"/>
+                <img id="leftImg" src="assets/results/attic_gt.png" alt="Left architecture output" class="compare-img"/>
                 <div class="compare-overlay" id="leftOverlay">
-                  <span class="overlay-metric" id="leftPSNR">PSNR: — dB</span>
-                  <span class="overlay-metric" id="leftSSIM">SSIM: —</span>
+                  <span class="overlay-metric" id="leftPSNR">PSNR: &infin; dB</span>
+                  <span class="overlay-metric" id="leftSSIM">SSIM: 1.0000</span>
                 </div>
               </div>
             </div>
@@ -595,17 +611,17 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
               <div class="divider-line"></div>
             </div>
             <div class="compare-side">
-              <div class="compare-label" id="rightLabel">Attn-Res U-Net (Paper ⭐)</div>
+              <div class="compare-label" id="rightLabel">Naïve Sum (256 frames)</div>
               <div class="compare-img-wrap">
-                <img id="rightImg" src="assets/placeholder_gen.svg" alt="Right architecture output" class="compare-img"/>
+                <img id="rightImg" src="assets/results/attic_naivesum.png" alt="Right architecture output" class="compare-img"/>
                 <div class="compare-overlay" id="rightOverlay">
-                  <span class="overlay-metric" id="rightPSNR">PSNR: — dB</span>
-                  <span class="overlay-metric" id="rightSSIM">SSIM: —</span>
+                  <span class="overlay-metric" id="rightPSNR">PSNR: 21.769 dB</span>
+                  <span class="overlay-metric" id="rightSSIM">SSIM: 0.3077</span>
                 </div>
               </div>
             </div>
           </div>
-          <p class="placeholder-note">📌 To populate: add your reconstruction images to <code>assets/results/</code> and update the paths in <code>js/main.js</code> under <code>archImages</code>.</p>
+          <p class="placeholder-note" style="color:var(--accent3);">✔ Real visual results loaded for Ground Truth and Naïve Sum. Other models show placeholder until model checkpoint weights are rendered.</p>
         </div>
 
         <!-- Results Table -->
@@ -624,12 +640,12 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             </thead>
             <tbody>
               <tr class="baseline-row">
-                <td>Naïve Baseline (Poisson Average)</td>
+                <td><strong>Naïve Sum Baseline (256 frames)</strong></td>
+                <td><strong style="color:var(--accent);">20.955</strong></td>
+                <td><strong style="color:var(--accent);">0.2924</strong></td>
                 <td>—</td>
                 <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td>Statistical Lower Bound</td>
+                <td>Verified Kaggle Baseline Score</td>
               </tr>
               <tr class="baseline-row">
                 <td>CNN</td>
@@ -673,7 +689,52 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
               </tr>
             </tbody>
           </table>
-          <p class="placeholder-note">📌 Fill in PSNR and SSIM values from your experiment logs in <code>index.html</code> and <code>js/main.js</code>.</p>
+
+          <!-- Scene-level breakdown table for Naive Sum -->
+          <div style="margin-top:2rem;">
+            <h4>Naïve Sum Baseline: Per-Scene Test Performance (batch_size = 256)</h4>
+            <table class="results-table" style="margin-top:0.75rem;">
+              <thead>
+                <tr>
+                  <th>Scene Name</th>
+                  <th>PSNR (dB)</th>
+                  <th>SSIM</th>
+                  <th>Camera Response</th>
+                  <th>Tonemapping</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>attic</code></td>
+                  <td>21.769 dB</td>
+                  <td>0.3077</td>
+                  <td><code>spc_avg_to_rgb (factor=0.5)</code></td>
+                  <td><code>linearrgb_to_srgb</code></td>
+                </tr>
+                <tr>
+                  <td><code>bachelors-quarters</code></td>
+                  <td>22.152 dB</td>
+                  <td>0.2611</td>
+                  <td><code>spc_avg_to_rgb (factor=0.5)</code></td>
+                  <td><code>linearrgb_to_srgb</code></td>
+                </tr>
+                <tr>
+                  <td><code>barbershop</code></td>
+                  <td>18.943 dB</td>
+                  <td>0.3085</td>
+                  <td><code>spc_avg_to_rgb (factor=0.5)</code></td>
+                  <td><code>linearrgb_to_srgb</code></td>
+                </tr>
+                <tr style="background:rgba(0,212,255,0.06); font-weight:700;">
+                  <td style="color:var(--accent);">Test Set Average (3 scenes)</td>
+                  <td style="color:var(--accent);">20.955 dB</td>
+                  <td style="color:var(--accent);">0.2924</td>
+                  <td>—</td>
+                  <td>—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -799,7 +860,44 @@ train_scenes = scenes[3:]   # 47 training scenes</code></pre>
           <div class="repro-step">
             <div class="repro-num">4</div>
             <div class="repro-body">
-              <h4>Preprocessing &amp; Decoding</h4>
+              <h4>Naïve Sum Baseline Execution (batch_size = 256)</h4>
+              <p>Replicate the statistical baseline across the test scenes with camera response inversion and sRGB tonemapping:</p>
+              <pre><code>from pathlib import Path
+import numpy as np
+from PIL import Image
+from skimage.metrics import peak_signal_noise_ratio, structural_similarity
+from visionsim.emulate.spc import spc_avg_to_rgb
+from visionsim.utils.color import linearrgb_to_srgb
+
+batch_size = 256
+for scene in test_scenes:
+    scene_path = Path("data/train") / scene
+    npy_file = list(scene_path.glob("*.npy"))[0]
+    png_file = list(scene_path.glob("*.png"))[0]
+
+    # Load photon measurements & unpack last 256 frames
+    pc = np.load(npy_file)
+    pc = np.unpackbits(pc[-batch_size:], axis=2)
+
+    # Average & sensor inversion
+    im = pc.sum(axis=0) / batch_size
+    im = spc_avg_to_rgb(im, factor=0.5)
+    im = linearrgb_to_srgb(im)
+    im = np.clip(im, 0, 1)
+
+    reconstructed = (im * 255).astype(np.uint8)
+    clean = np.array(Image.open(png_file).convert("RGB"))
+
+    psnr = peak_signal_noise_ratio(clean / 255.0, reconstructed / 255.0, data_range=1.0)
+    ssim = structural_similarity(clean / 255.0, reconstructed / 255.0, channel_axis=2, data_range=1.0)
+    print(f"{scene} -> PSNR: {psnr:.3f} dB, SSIM: {ssim:.4f}")
+# Output: Average PSNR: 20.955 dB, Average SSIM: 0.2924</code></pre>
+            </div>
+          </div>
+          <div class="repro-step">
+            <div class="repro-num">5</div>
+            <div class="repro-body">
+              <h4>Deep Learning Preprocessing &amp; Decoding</h4>
               <pre><code>import numpy as np
 import torch
 
@@ -818,7 +916,7 @@ def preprocess_photoncube(path):
             </div>
           </div>
           <div class="repro-step">
-            <div class="repro-num">5</div>
+            <div class="repro-num">6</div>
             <div class="repro-body">
               <h4>Training (Proposed Attention Residual U-Net)</h4>
               <pre><code>python train.py \
@@ -836,7 +934,7 @@ def preprocess_photoncube(path):
             </div>
           </div>
           <div class="repro-step">
-            <div class="repro-num">6</div>
+            <div class="repro-num">7</div>
             <div class="repro-body">
               <h4>Inference &amp; Evaluation</h4>
               <pre><code># Restore checkpoint from epoch 50 and run mixed precision inference
