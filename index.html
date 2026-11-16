@@ -561,15 +561,25 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
         <!-- Architecture Comparison Slider (INTERACTIVE ELEMENT) -->
         <div class="interaction-section">
           <h3>🔬 Interactive: Output Inspection &amp; Model Comparison</h3>
-          <p>Inspect and compare model reconstructions against the clean Ground Truth across the three held-out test scenes (<code>attic</code>, <code>bachelors-quarters</code>, <code>barbershop</code>). Ground Truth and Naïve Sum are loaded from our actual Kaggle test evaluation!</p>
+          <p>Inspect and compare model reconstructions against the clean Ground Truth across the three held-out test scenes (<code>attic</code>, <code>bachelors-quarters</code>, <code>barbershop</code>). Ground Truth and Naïve Sum are loaded directly from our high-resolution Kaggle test evaluation!</p>
           
-          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.25rem; flex-wrap:wrap;">
-            <label for="sceneSelect" style="font-weight:600; font-size:0.9rem; color:var(--accent);">Select Held-out Test Scene:</label>
-            <select id="sceneSelect" class="arch-select" style="min-width:260px;">
-              <option value="attic" selected>Scene 1: attic (PSNR: 21.769 dB, SSIM: 0.3077)</option>
-              <option value="bachelors">Scene 2: bachelors-quarters (PSNR: 22.152 dB, SSIM: 0.2611)</option>
-              <option value="barbershop">Scene 3: barbershop (PSNR: 18.943 dB, SSIM: 0.3085)</option>
-            </select>
+          <div class="compare-toolbar">
+            <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+              <label for="sceneSelect" style="font-weight:600; font-size:0.9rem; color:var(--accent);">Select Held-out Test Scene:</label>
+              <select id="sceneSelect" class="arch-select" style="min-width:260px;">
+                <option value="attic" selected>Scene 1: attic (PSNR: 21.769 dB, SSIM: 0.3077)</option>
+                <option value="bachelors">Scene 2: bachelors-quarters (PSNR: 22.152 dB, SSIM: 0.2611)</option>
+                <option value="barbershop">Scene 3: barbershop (PSNR: 18.943 dB, SSIM: 0.3085)</option>
+              </select>
+            </div>
+
+            <!-- Brightness / Contrast booster for low-light scenes -->
+            <div class="exposure-controls">
+              <span class="exposure-label">💡 Exposure:</span>
+              <button type="button" class="exposure-btn active" data-exp="normal">Normal</button>
+              <button type="button" class="exposure-btn" data-exp="boost">+35% Boost</button>
+              <button type="button" class="exposure-btn" data-exp="high">High Contrast</button>
+            </div>
           </div>
 
           <div class="compare-controls">
@@ -594,34 +604,123 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             </select>
           </div>
 
+          <!-- Side by Side Panel (Metrics outside the image container for complete visibility) -->
           <div class="compare-panel">
             <div class="compare-side">
               <div class="compare-label" id="leftLabel">Ground Truth (Clean PNG)</div>
               <div class="compare-img-wrap">
                 <img id="leftImg" src="assets/results/attic_gt.png" alt="Left architecture output" class="compare-img"/>
-                <div class="compare-overlay" id="leftOverlay">
-                  <span class="overlay-metric" id="leftPSNR">PSNR: &infin; dB</span>
-                  <span class="overlay-metric" id="leftSSIM">SSIM: 1.0000</span>
-                </div>
+              </div>
+              <div class="compare-stats-bar">
+                <span class="overlay-metric" id="leftPSNR">PSNR: &infin; dB</span>
+                <span class="overlay-metric" id="leftSSIM">SSIM: 1.0000</span>
               </div>
             </div>
+
             <div class="compare-divider">
               <div class="divider-line"></div>
               <div class="divider-badge">Compare</div>
               <div class="divider-line"></div>
             </div>
+
             <div class="compare-side">
               <div class="compare-label" id="rightLabel">Naïve Sum (256 frames)</div>
               <div class="compare-img-wrap">
                 <img id="rightImg" src="assets/results/attic_naivesum.png" alt="Right architecture output" class="compare-img"/>
-                <div class="compare-overlay" id="rightOverlay">
-                  <span class="overlay-metric" id="rightPSNR">PSNR: 21.769 dB</span>
-                  <span class="overlay-metric" id="rightSSIM">SSIM: 0.3077</span>
+              </div>
+              <div class="compare-stats-bar">
+                <span class="overlay-metric" id="rightPSNR">PSNR: 21.769 dB</span>
+                <span class="overlay-metric" id="rightSSIM">SSIM: 0.3077</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Before/After Split Reveal Slider -->
+          <div class="slider-wrap-box">
+            <h4>↔ Interactive Before / After Split Slider</h4>
+            <p>Drag the slider handle horizontally across the scene to directly reveal the single-photon Poisson noise and detail degradation in the Naïve Sum baseline versus clean Ground Truth.</p>
+            
+            <div class="slider-container" id="splitSliderBox">
+              <img id="splitImgGt" src="assets/results/attic_gt.png" alt="Ground truth" class="slider-img slider-img-gt compare-img"/>
+              <img id="splitImgNaive" src="assets/results/attic_naivesum.png" alt="Naive sum reconstruction" class="slider-img slider-img-naive compare-img"/>
+              <div class="slider-handle" id="sliderHandle"></div>
+              <input type="range" min="0" max="100" value="50" class="slider-range-input" id="sliderRange" aria-label="Split comparison slider" />
+            </div>
+            <div class="slider-labels-row">
+              <span style="color:var(--accent);">&larr; Left: Naïve Sum Reconstruction</span>
+              <span style="color:var(--accent3);">Right: Ground Truth &rarr;</span>
+            </div>
+          </div>
+
+          <!-- Direct 3-Scene Gallery -->
+          <div style="margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--border);">
+            <h4>🖼 All Held-out Test Scenes (Ground Truth vs. Naïve Sum)</h4>
+            <p style="color:var(--text-muted); font-size:0.88rem;">Side-by-side view of all three test scenes evaluated in our Kaggle benchmark.</p>
+            
+            <div class="scene-gallery-grid">
+              <!-- Card 1: Attic -->
+              <div class="scene-gallery-card">
+                <div class="scene-gallery-header">
+                  <span class="scene-gallery-title">Scene 1: attic</span>
+                  <span class="scene-gallery-badge">PSNR: 21.77 dB | SSIM: 0.3077</span>
+                </div>
+                <div class="scene-gallery-body">
+                  <div class="scene-pair">
+                    <div class="scene-thumb-wrap">
+                      <img src="assets/results/attic_gt.png" alt="attic ground truth" class="scene-thumb-img compare-img" />
+                      <span class="scene-thumb-label">Ground Truth</span>
+                    </div>
+                    <div class="scene-thumb-wrap">
+                      <img src="assets/results/attic_naivesum.png" alt="attic naivesum" class="scene-thumb-img compare-img" />
+                      <span class="scene-thumb-label">Naïve Sum</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 2: Bachelors Quarters -->
+              <div class="scene-gallery-card">
+                <div class="scene-gallery-header">
+                  <span class="scene-gallery-title">Scene 2: bachelors-quarters</span>
+                  <span class="scene-gallery-badge">PSNR: 22.15 dB | SSIM: 0.2611</span>
+                </div>
+                <div class="scene-gallery-body">
+                  <div class="scene-pair">
+                    <div class="scene-thumb-wrap">
+                      <img src="assets/results/bachelors_gt.png" alt="bachelors ground truth" class="scene-thumb-img compare-img" />
+                      <span class="scene-thumb-label">Ground Truth</span>
+                    </div>
+                    <div class="scene-thumb-wrap">
+                      <img src="assets/results/bachelors_naivesum.png" alt="bachelors naivesum" class="scene-thumb-img compare-img" />
+                      <span class="scene-thumb-label">Naïve Sum</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 3: Barbershop -->
+              <div class="scene-gallery-card">
+                <div class="scene-gallery-header">
+                  <span class="scene-gallery-title">Scene 3: barbershop</span>
+                  <span class="scene-gallery-badge">PSNR: 18.94 dB | SSIM: 0.3085</span>
+                </div>
+                <div class="scene-gallery-body">
+                  <div class="scene-pair">
+                    <div class="scene-thumb-wrap">
+                      <img src="assets/results/barbershop_gt.png" alt="barbershop ground truth" class="scene-thumb-img compare-img" />
+                      <span class="scene-thumb-label">Ground Truth</span>
+                    </div>
+                    <div class="scene-thumb-wrap">
+                      <img src="assets/results/barbershop_naivesum.png" alt="barbershop naivesum" class="scene-thumb-img compare-img" />
+                      <span class="scene-thumb-label">Naïve Sum</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <p class="placeholder-note" style="color:var(--accent3);">✔ Real visual results loaded for Ground Truth and Naïve Sum. Other models show placeholder until model checkpoint weights are rendered.</p>
+
+          <p class="placeholder-note" style="color:var(--accent3); margin-top:1.5rem;">✔ High-resolution visual results loaded for Ground Truth and Naïve Sum. Deep learning model checkpoints can be compared above.</p>
         </div>
 
         <!-- Results Table -->

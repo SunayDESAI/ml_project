@@ -234,6 +234,12 @@ function updateCompare() {
   document.getElementById('rightLabel').textContent = archLabels[rKey];
   document.getElementById('rightPSNR').textContent  = 'PSNR: ' + rightM.psnr + (rightM.psnr !== '—' && rightM.psnr !== '∞' ? ' dB' : (rightM.psnr === '∞' ? ' dB' : ''));
   document.getElementById('rightSSIM').textContent  = 'SSIM: ' + rightM.ssim;
+
+  // Update split slider images if present
+  const splitGt = document.getElementById('splitImgGt');
+  const splitNaive = document.getElementById('splitImgNaive');
+  if (splitGt && currentScene.images.gt) splitGt.src = currentScene.images.gt;
+  if (splitNaive && currentScene.images.naive) splitNaive.src = currentScene.images.naive;
 }
 
 if (document.getElementById('sceneSelect')) {
@@ -243,7 +249,36 @@ document.getElementById('leftArch').addEventListener('change',  updateCompare);
 document.getElementById('rightArch').addEventListener('change', updateCompare);
 updateCompare();  // initial render
 
-/* ─── 7. Scroll-reveal animation ─── */
+/* ─── 7. Interactive Before/After Split Slider logic ─── */
+const sliderRange = document.getElementById('sliderRange');
+const sliderHandle = document.getElementById('sliderHandle');
+const sliderNaive = document.getElementById('splitImgNaive');
+if (sliderRange && sliderHandle && sliderNaive) {
+  sliderRange.addEventListener('input', (e) => {
+    const val = e.target.value;
+    sliderHandle.style.left = `${val}%`;
+    sliderNaive.style.clipPath = `polygon(0 0, ${val}% 0, ${val}% 100%, 0 100%)`;
+  });
+}
+
+/* ─── 8. Low-light Exposure Booster ─── */
+const exposureFilters = {
+  normal: 'none',
+  boost: 'brightness(1.35) contrast(1.15)',
+  high: 'brightness(1.6) contrast(1.3)'
+};
+document.querySelectorAll('.exposure-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.exposure-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const filterVal = exposureFilters[btn.dataset.exp] || 'none';
+    document.querySelectorAll('.compare-img').forEach(img => {
+      img.style.filter = filterVal;
+    });
+  });
+});
+
+/* ─── 9. Scroll-reveal animation ─── */
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => {
     if (e.isIntersecting) {
