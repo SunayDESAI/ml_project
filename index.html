@@ -15,7 +15,7 @@
   <nav class="navbar" id="navbar">
     <div class="nav-brand">
       <span class="nav-icon">⚛</span>
-      <span>SinglePhoton<span class="accent">AI</span></span>
+      <span>SinglePhoton</span>
     </div>
     <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
     <ul class="nav-links" id="navLinks">
@@ -37,10 +37,10 @@
     <div class="photon-particles" id="particles"></div>
     <div class="hero-content">
       <h1>Single Photon<br/><span class="gradient-text">Image Reconstruction</span></h1>
-      <p class="hero-sub">Deep learning image reconstruction pipeline for the Single Photon Challenge: from statistical frame averaging and CNNs to U-Net and our proposed <strong>Attention-Residual U-Net</strong> (featuring GroupNorm &amp; Global Residual Learning).</p>
+      <p class="hero-sub">Deep learning image reconstruction pipeline for the Single Photon Challenge: from statistical frame averaging and CNNs to U-Net and our proposed <strong>Attention-Residual U-Net</strong> with residual blocks and attention-gated skip connections.</p>
       <div class="hero-stats">
         <div class="stat-pill"><span class="stat-num">4</span><span class="stat-lbl">Models</span></div>
-        <div class="stat-pill"><span class="stat-num">50</span><span class="stat-lbl">Epochs (Cosine)</span></div>
+        <div class="stat-pill"><span class="stat-num">50</span><span class="stat-lbl">Training Epochs</span></div>
         <div class="stat-pill"><span class="stat-num">384</span><span class="stat-lbl">Input Channels</span></div>
         <div class="stat-pill"><span class="stat-num">800²</span><span class="stat-lbl">Resolution</span></div>
       </div>
@@ -117,7 +117,7 @@
       <div class="container">
         <div class="section-label">02 · Data Understanding</div>
         <h2 class="section-title">Dataset Overview</h2>
-        <p class="section-intro">We used the <strong>Single Photon Challenge dataset</strong> from <a href="https://singlephotonchallenge.com" target="_blank" rel="noopener" style="color:var(--accent)">singlephotonchallenge.com</a>. It pairs sparse photon cubes (.npy) with clean ground-truth RGB images (.png), organized by scene and frame index.</p>
+        <p class="section-intro">We used the <strong>Single Photon Challenge dataset</strong> from <a href="https://singlephotonchallenge.com" target="_blank" rel="noopener" style="color:var(--accent)">singlephotonchallenge.com</a>. The working data consists of scene folders pairing sparse photon cubes (<code>.npy</code>) with clean RGB targets (<code>.png</code>).</p>
 
         <div class="data-grid">
           <div class="data-card">
@@ -134,19 +134,18 @@
             <div class="data-card-title">🖼 Ground Truth</div>
             <div class="data-card-body">
               <div class="data-row"><span>Format</span><code>.png</code></div>
-              <div class="data-row"><span>Naming</span><code>&lt;SCENE-NAME&gt;/&lt;FRAME-IDX&gt;.png</code></div>
+              <div class="data-row"><span>Organization</span><code>one or more files per scene</code></div>
               <div class="data-row"><span>Channels</span><code>RGB (3 channels)</code></div>
               <div class="data-row"><span>Resolution</span><code>800 × 800</code></div>
-              <div class="data-row"><span>Corresponds to</span><code>Last bitplane of paired .npy</code></div>
+              <div class="data-row"><span>Role</span><code>Clean RGB reconstruction target</code></div>
               <div class="data-row"><span>Pixel Range</span><code>[0, 255] → normalized [0,1]</code></div>
             </div>
           </div>
           <div class="data-card">
             <div class="data-card-title">🗂 Split</div>
             <div class="data-card-body">
-              <div class="data-row"><span>Official Train Set</span><code>50 simulated scenes (~425 GB)</code></div>
-              <div class="data-row"><span>Official Test Set</span><code>5 scenes (ground truth hidden)</code></div>
-              <div class="data-row"><span>Our local split</span><code>47 train / 3 val (from 50)</code></div>
+              <div class="data-row"><span>Working subset</span><code>First 50 sorted scene folders</code></div>
+              <div class="data-row"><span>Our local split</span><code>47 train / 3 held-out (from 50)</code></div>
               <div class="data-row"><span>Split Level</span><code>Scene-level (no leakage)</code></div>
             </div>
           </div>
@@ -157,10 +156,14 @@
                 <li>Extreme sparsity — most pixels are zero (no photon detected)</li>
                 <li>Poisson noise inherent to single-photon detection</li>
                 <li>Packed bit encoding in raw <code>.npy</code> files requires unpacking</li>
-                <li>No missing scenes; all 50 scenes present</li>
+                <li>The scripts use the first matching <code>.npy</code> and <code>.png</code> in each scene</li>
               </ul>
             </div>
           </div>
+        </div>
+
+        <div class="callout callout-info" style="margin-top:1.5rem;">
+          <strong>What one row represents:</strong> one scene folder provides one training or evaluation example: its selected photon cube is decoded into 128 RGB frames, concatenated into a 384-channel input tensor, and paired with one clean 800×800 RGB target image.
         </div>
 
         <div class="shape-visual">
@@ -193,14 +196,14 @@
       <div class="container">
         <div class="section-label">03 · Preprocessing</div>
         <h2 class="section-title">From Photon Counts to Model Input</h2>
-        <p class="section-intro">Preprocessing transforms the raw 4-D bit-packed arrays into 384-channel tensors ready for each neural network using the same fixed decoding and input scaling.</p>
+        <p class="section-intro">Preprocessing transforms the raw 4-D bit-packed arrays into 384-channel tensors. The choices preserve the encoded photon detections, keep the temporal input fixed, and place photon and target values on a common <code>[0, 1]</code> scale.</p>
 
         <div class="steps-timeline">
           <div class="step">
             <div class="step-num">1</div>
             <div class="step-body">
               <h4>Frame Selection</h4>
-              <p>Select the <strong>last 128 frames</strong> from the 1024-frame temporal dimension. These later frames contain the most useful photon accumulation signal.</p>
+              <p>Select the <strong>last 128 frames</strong> from the 1024-frame temporal dimension. This fixes the model input size while using the temporal portion selected by the training scripts.</p>
               <pre><code>frames = raw_data[-128:, :, :, :]  # (128, 800, 100, 3)</code></pre>
             </div>
           </div>
@@ -208,7 +211,7 @@
             <div class="step-num">2</div>
             <div class="step-body">
               <h4>Bit Unpacking</h4>
-              <p>Each entry in the 100-element axis is a packed byte holding 8 binary photon-detection flags. All three training scripts use <code>np.unpackbits</code> to recover the 800-pixel width.</p>
+              <p>Each entry in the 100-element axis is a packed byte holding 8 binary photon-detection flags. All three training scripts use <code>np.unpackbits</code> to recover the 800-pixel width instead of treating packed bytes as ordinary spatial pixels.</p>
               <pre><code>unpacked = np.unpackbits(frames, axis=2)  # (128, 800, 800, 3)</code></pre>
             </div>
           </div>
@@ -216,7 +219,7 @@
             <div class="step-num">3</div>
             <div class="step-body">
               <h4>Reshape for PyTorch</h4>
-              <p>Rearrange dimensions from <code>(128, 800, 800, 3)</code> to PyTorch's channel-first format <code>(C, H, W)</code> by merging the frame and color axes into a single channel dimension.</p>
+              <p>Convert each RGB frame to channel-first format and concatenate the 128 frames along the channel axis. This exposes the temporal observations to a 384-channel convolutional input.</p>
               <pre><code># (128, 800, 800, 3) → (384, 800, 800)
 tensor = unpacked.transpose(0, 3, 1, 2)  # (128, 3, 800, 800)
 tensor = tensor.reshape(384, 800, 800)</code></pre>
@@ -241,7 +244,7 @@ gt = gt_image.astype(np.float32) / 255.0</code></pre>
       <div class="container">
         <div class="section-label">04 · Baseline &amp; Methods</div>
         <h2 class="section-title">Architectures &amp; Methodology</h2>
-        <p class="section-intro">From traditional statistical photon estimation to deep convolutional networks, our proposed architecture is an <strong>Attention Residual U-Net with Group Normalization and Global Residual Learning</strong>.</p>
+        <p class="section-intro">From traditional statistical photon estimation to deep convolutional networks, our proposed architecture is an <strong>Attention-Residual U-Net</strong> with residual blocks and attention-gated skip connections.</p>
 
         <div class="arch-tabs">
           <div class="tab-buttons">
@@ -265,7 +268,7 @@ gt = gt_image.astype(np.float32) / 255.0</code></pre>
                   <li><strong>Benchmark Score:</strong> Achieves an <strong>Average PSNR of 20.955 dB</strong> and <strong>SSIM of 0.2924</strong> across the 3 test scenes.</li>
                 </ul>
                 <div class="arch-assumption">
-                  <strong>Empirical Floor:</strong> While simple and fast, statistical averaging cannot resolve high-frequency textures or cancel Poisson noise under extreme photon scarcity, producing severe noise speckle and low structural fidelity (SSIM ~ 0.29).
+                  <strong>Comparison note:</strong> This baseline uses 256 accumulated frames, whereas the learned models use 128 frames. Its results are therefore a descriptive reference rather than a controlled architecture-only ablation.
                 </div>
               </div>
               <div class="arch-diagram">
@@ -345,22 +348,21 @@ gt = gt_image.astype(np.float32) / 255.0</code></pre>
             <div class="arch-layout">
               <div class="arch-desc">
                 <h3>Attention Residual U-Net <span style="color:var(--accent3);font-size:0.85rem;font-weight:700;">(Proposed Model)</span></h3>
-                <p>Our proposed architecture integrates <strong>residual blocks with Group Normalization</strong>, <strong>attention-gated skip connections</strong>, and an explicit <strong>global residual shortcut</strong>.</p>
+                <p>Our proposed architecture integrates <strong>residual blocks</strong> and <strong>attention-gated skip connections</strong> in a three-level encoder-decoder.</p>
                 <ul>
-                  <li><strong>Residual Unit:</strong> y = &sigma;(GN(Conv<sub>2</sub>(&sigma;(GN(Conv<sub>1</sub>(x)))))) + S(x) with GroupNorm for small batch stability and 1&times;1 conv projection for dimension matching.</li>
+                  <li><strong>Residual Unit:</strong> two convolutions with ReLU activations and an identity or 1&times;1 projection shortcut when channel dimensions differ.</li>
                   <li><strong>Encoder Hierarchy:</strong> 3 stages (128 &rarr; 256 &rarr; 512 channels) followed by 2&times;2 Max-Pooling.</li>
-                  <li><strong>Bottleneck:</strong> Dual residual blocks with 1024 channels at H/8 &times; W/8 resolution.</li>
+                  <li><strong>Bottleneck:</strong> One residual block with 1024 channels at H/8 &times; W/8 resolution.</li>
                   <li><strong>Attention-Gated Decoder:</strong> Transposed convolutions (1024 &rarr; 512 &rarr; 256 &rarr; 128) with spatial attention maps &alpha; = &sigma;(&psi;(ReLU(W<sub>g</sub>g + W<sub>x</sub>x))).</li>
-                  <li><strong>Global Residual Connection:</strong> Channel-wise mean x<sub>mean</sub> = (1/C)&sum;x<sub>c</sub> added directly to output: y<sub>final</sub> = y<sub>net</sub> + x<sub>mean</sub> to preserve global photon flux!</li>
                   <li><strong>Output Layer:</strong> 1&times;1 convolution mapping 128 channels to 3-channel RGB.</li>
                 </ul>
                 <div class="arch-assumption">
-                  <strong>Core Insight:</strong> GroupNorm eliminates BatchNorm batch-size dependency, attention gates focus on sparse photon signals, and the global residual bypass preserves base illumination.
+                  <strong>Core Insight:</strong> Residual shortcuts support feature refinement, while attention gates reweight encoder features before decoder concatenation.
                 </div>
               </div>
               <div class="arch-diagram">
                 <div class="arch-flow">
-                  <div class="arch-block input-block">(384, H, W) Input &rarr; Compute x<sub>mean</sub></div>
+                  <div class="arch-block input-block">(384, H, W) Input</div>
                   <div class="arch-conn">↓</div>
                   <div class="arch-block enc-block">Enc 1: ResBlock 128 ch &rarr; MaxPool</div>
                   <div class="arch-conn">↓</div>
@@ -368,13 +370,13 @@ gt = gt_image.astype(np.float32) / 255.0</code></pre>
                   <div class="arch-conn">↓</div>
                   <div class="arch-block enc-block">Enc 3: ResBlock 512 ch &rarr; MaxPool</div>
                   <div class="arch-conn">↓</div>
-                  <div class="arch-block bottle-block">Bottleneck: ResBlock &times; 2 (1024 ch)</div>
+                  <div class="arch-block bottle-block">Bottleneck: ResBlock (1024 ch)</div>
                   <div class="arch-conn">&uarr;</div>
                   <div class="arch-block dec-block">Dec: TransConv + Attention Skip + ResBlock</div>
                   <div class="arch-conn">↓</div>
                   <div class="arch-block conv-block">Conv 1&times;1 (128 &rarr; 3 ch)</div>
                   <div class="arch-conn">↓</div>
-                  <div class="arch-block output-block">y<sub>final</sub> = y<sub>net</sub> + x<sub>mean</sub> (3, H, W)</div>
+                  <div class="arch-block output-block">Sigmoid RGB output (3, H, W)</div>
                 </div>
               </div>
             </div>
@@ -480,7 +482,7 @@ gt = gt_image.astype(np.float32) / 255.0</code></pre>
       <div class="container">
         <div class="section-label">06 · Results</div>
         <h2 class="section-title">Model Comparison</h2>
-        <p class="section-intro">Compare the four architectures across PSNR and SSIM on our held-out test scenes. All values are the three-scene averages from the supplied predictions.</p>
+        <p class="section-intro">Compare the four architectures across PSNR and SSIM on our held-out test scenes. All values are the three-scene averages from the supplied predictions. Use the metric buttons, scene selector, and model selectors to inspect the comparison; exposure controls change display brightness only, not the reported metrics.</p>
 
         <!-- Interactive Chart -->
         <div class="chart-controls">
@@ -711,6 +713,10 @@ gt = gt_image.astype(np.float32) / 255.0</code></pre>
             </tbody>
           </table>
 
+          <div class="callout callout-info" style="margin-top:1.25rem;">
+            <strong>Reasoning from the comparison:</strong> the learned models improve over the statistical reference on both metrics. U-Net improves the CNN average from 26.517 to 27.493 dB and from 0.7607 to 0.7863 SSIM; the supplied Attention-Residual U-Net results are highest at 29.673 dB and 0.8407 SSIM. These comparisons describe the supplied three-scene results and do not isolate one architectural change at a time.
+          </div>
+
         </div>
       </div>
     </section>
@@ -747,6 +753,15 @@ gt = gt_image.astype(np.float32) / 255.0</code></pre>
               <li>The scripts do not establish causal superiority because they do not run controlled ablations</li>
               <li>Three held-out scenes are not sufficient to represent general deployment performance</li>
               <li>PSNR and plain SSIM do not measure every aspect of perceptual quality</li>
+            </ul>
+          </div>
+          <div class="error-card err-type">
+            <div class="err-icon">📉</div>
+            <h4>Observed Error Pattern</h4>
+            <ul>
+              <li>Barbershop is the hardest displayed scene: Attention-Residual U-Net reaches 26.18 dB and 0.8150 SSIM, below its attic and bachelors-quarters results</li>
+              <li>Attention-Residual U-Net spans 26.18–31.80 dB across the three scenes, showing meaningful scene-level variation</li>
+              <li>The metrics identify where performance is weaker, but the scripts do not log per-pixel error maps or confidence intervals</li>
             </ul>
           </div>
         </div>
@@ -794,7 +809,7 @@ gt = gt_image.astype(np.float32) / 255.0</code></pre>
       <div class="container">
         <div class="section-label">09 · Reproduction Steps</div>
         <h2 class="section-title">Reproduce Our Results</h2>
-        <p class="section-intro">Everything needed to replicate the main results, including data access, code steps, and split details.</p>
+        <p class="section-intro">The complete training and baseline scripts are available in the <a href="https://github.com/SunayDESAI/ml_project" target="_blank" rel="noopener" style="color:var(--accent)">repository</a>. The steps below specify data access, preprocessing, splitting, training, and evaluation.</p>
 
         <div class="repro-steps">
           <div class="repro-step">
@@ -863,6 +878,7 @@ python unet_training.py
 python attn_res_unet_training.py</code></pre>
             <p>Each script trains for 50 epochs with Adam at <code>1e-4</code> and uses:</p>
             <pre><code>loss = 0.7 * L1 + 0.2 * (1 - SSIM) + 0.1 * VGG</code></pre>
+            <p>The statistical reference is reproduced separately with <code>naive_baseline.py</code>. It uses the last 256 frames, requires the challenge's <code>visionsim</code> utilities, and reports the same PSNR/SSIM metrics.</p>
             </div>
           </div>
           <div class="repro-step">
@@ -892,12 +908,12 @@ ssim = structural_similarity(
   <footer class="footer">
     <div class="container footer-inner">
       <div>
-        <span class="nav-icon">⚛</span> <strong>SinglePhoton AI</strong>
+        <span class="nav-icon">⚛</span> <strong>SinglePhoton</strong>
         <p>Single Photon Image Reconstruction · ES 335 Project · 2026</p>
       </div>
       <div class="footer-links">
-        <a href="https://github.com" target="_blank" rel="noopener">GitHub ↗</a>
-        <a href="https://www.kaggle.com" target="_blank" rel="noopener">Dataset ↗</a>
+        <a href="https://github.com/SunayDESAI/ml_project" target="_blank" rel="noopener">GitHub ↗</a>
+        <a href="https://singlephotonchallenge.com" target="_blank" rel="noopener">Dataset ↗</a>
         <a href="#top">Back to top ↑</a>
       </div>
     </div>
