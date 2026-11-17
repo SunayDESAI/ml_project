@@ -457,14 +457,20 @@ gt = gt_image.astype(np.float32) / 255.0</code></pre>
             <h4>Metrics</h4>
             <div class="metric-list">
               <div class="metric-item">
-                <div class="metric-name">PSNR</div>
-                <div class="metric-formula">10 · log₁₀(MAX² / MSE)</div>
-                <div class="metric-note">Higher is better. Standard pixel-level quality in dB. <code>skimage.metrics.peak_signal_noise_ratio</code></div>
+                <div class="metric-heading">
+                  <div class="metric-name">PSNR</div>
+                  <div class="metric-formula">10 · log₁₀(MAX² / MSE)</div>
+                </div>
+                <div class="metric-note">Higher is better. Pixel-level reconstruction fidelity, reported in dB.</div>
+                <code class="metric-code">peak_signal_noise_ratio</code>
               </div>
               <div class="metric-item">
-                <div class="metric-name">SSIM</div>
-                <div class="metric-formula">Structural Similarity Index</div>
-                <div class="metric-note">Higher is better. Plain single-scale structural similarity is computed with <code>skimage.metrics.structural_similarity</code> using <code>channel_axis=2</code> and <code>data_range=1.0</code>.</div>
+                <div class="metric-heading">
+                  <div class="metric-name">SSIM</div>
+                  <div class="metric-formula">Structural Similarity Index</div>
+                </div>
+                <div class="metric-note">Higher is better. Plain single-scale similarity with <code>channel_axis=2</code> and <code>data_range=1.0</code>.</div>
+                <code class="metric-code">structural_similarity</code>
               </div>
             </div>
           </div>
