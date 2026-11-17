@@ -63,14 +63,14 @@ const models = [
 // ─── Experiment Results (three-scene test averages) ───
 const data = {
   psnr: {
-    values:  [20.955, 26.517, 27.493, 29.10],
+    values:  [20.955, 26.517, 27.493, 29.673],
     label:   'PSNR (dB)',
     color:   'rgba(0, 212, 255, 0.85)',
     border:  'rgba(0, 212, 255, 1)',
     yLabel:  'PSNR (dB)',
   },
   ssim: {
-    values:  [0.2924, 0.7607, 0.7863, 0.8400],
+    values:  [0.2924, 0.7607, 0.7863, 0.8407],
     label:   'SSIM',
     color:   'rgba(124, 58, 237, 0.85)',
     border:  'rgba(124, 58, 237, 1)',
@@ -153,13 +153,14 @@ const sceneDatabase = {
       naive: 'assets/results/attic_naivesum.png',
       cnn: 'assets/results/attic_cnn.png',
       unet: 'assets/results/attic_unet.png',
+      attnres: 'assets/results/attic_attnres.png',
     },
     metrics: {
       gt: { psnr: '∞', ssim: '1.0000' },
       naive: { psnr: '21.769', ssim: '0.3077' },
       cnn: { psnr: '28.41', ssim: '0.7470' },
       unet: { psnr: '29.82', ssim: '0.7940' },
-      attnres: { psnr: '—', ssim: '—' },
+      attnres: { psnr: '31.04', ssim: '0.8370' },
     }
   },
   bachelors: {
@@ -169,13 +170,14 @@ const sceneDatabase = {
       naive: 'assets/results/bachelors_naivesum.png',
       cnn: 'assets/results/bachelors_cnn.png',
       unet: 'assets/results/bachelors_unet.png',
+      attnres: 'assets/results/bachelors_attnres.png',
     },
     metrics: {
       gt: { psnr: '∞', ssim: '1.0000' },
       naive: { psnr: '22.152', ssim: '0.2611' },
       cnn: { psnr: '27.48', ssim: '0.8110' },
       unet: { psnr: '28.67', ssim: '0.8310' },
-      attnres: { psnr: '—', ssim: '—' },
+      attnres: { psnr: '31.80', ssim: '0.8700' },
     }
   },
   barbershop: {
@@ -185,13 +187,14 @@ const sceneDatabase = {
       naive: 'assets/results/barbershop_naivesum.png',
       cnn: 'assets/results/barbershop_cnn.png',
       unet: 'assets/results/barbershop_unet.png',
+      attnres: 'assets/results/barbershop_attnres.png',
     },
     metrics: {
       gt: { psnr: '∞', ssim: '1.0000' },
       naive: { psnr: '18.943', ssim: '0.3085' },
       cnn: { psnr: '23.66', ssim: '0.7240' },
       unet: { psnr: '23.99', ssim: '0.7340' },
-      attnres: { psnr: '—', ssim: '—' },
+      attnres: { psnr: '26.18', ssim: '0.8150' },
     }
   }
 };

@@ -486,7 +486,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
       <div class="container">
         <div class="section-label">06 · Results</div>
         <h2 class="section-title">Model Comparison</h2>
-        <p class="section-intro">Compare the four architectures across PSNR and SSIM on our held-out test scenes. U-Net values are the three-scene averages from the supplied predictions; MS-SSIM and LPIPS remain unavailable.</p>
+        <p class="section-intro">Compare the four architectures across PSNR and SSIM on our held-out test scenes. U-Net and Attention-Residual U-Net values are the three-scene averages from the supplied predictions; MS-SSIM and LPIPS remain unavailable.</p>
 
         <!-- Interactive Chart -->
         <div class="chart-controls">
@@ -572,15 +572,15 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
 
           <!-- Direct 3-Scene Gallery -->
           <div style="margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--border);">
-            <h4>🖼 All Held-out Test Scenes (Ground Truth vs. Naïve Sum vs. CNN vs. U-Net)</h4>
-            <p style="color:var(--text-muted); font-size:0.88rem;">Side-by-side view of all three test scenes evaluated across Ground Truth, Naïve Sum, CNN, and U-Net reconstruction.</p>
+            <h4>🖼 All Held-out Test Scenes (Ground Truth vs. Naïve Sum vs. CNN vs. U-Net vs. Attn-Res)</h4>
+            <p style="color:var(--text-muted); font-size:0.88rem;">Side-by-side view of all three test scenes evaluated across Ground Truth, Naïve Sum, CNN, U-Net, and Attention-Residual U-Net reconstruction.</p>
             
             <div class="scene-gallery-grid">
               <!-- Card 1: Attic -->
               <div class="scene-gallery-card">
                 <div class="scene-gallery-header">
                   <span class="scene-gallery-title">Scene 1: attic</span>
-                  <span class="scene-gallery-badge">CNN: 28.41 · U-Net: 29.82 dB</span>
+                  <span class="scene-gallery-badge">Attn-Res: 31.04 dB | 0.8370</span>
                 </div>
                 <div class="scene-gallery-body">
                   <div class="scene-pair" style="grid-template-columns: 1fr 1fr;">
@@ -600,6 +600,10 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                       <img src="assets/results/attic_unet.png" alt="attic U-Net prediction" class="scene-thumb-img compare-img" />
                       <span class="scene-thumb-label" style="color:var(--accent3);">U-Net (29.82 dB)</span>
                     </div>
+                    <div class="scene-thumb-wrap">
+                      <img src="assets/results/attic_attnres.png" alt="attic Attention-Residual U-Net prediction" class="scene-thumb-img compare-img" />
+                      <span class="scene-thumb-label" style="color:var(--accent2);">Attn-Res (31.04 dB)</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -608,7 +612,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
               <div class="scene-gallery-card">
                 <div class="scene-gallery-header">
                   <span class="scene-gallery-title">Scene 2: bachelors-quarters</span>
-                  <span class="scene-gallery-badge">CNN: 27.48 · U-Net: 28.67 dB</span>
+                  <span class="scene-gallery-badge">Attn-Res: 31.80 dB | 0.8700</span>
                 </div>
                 <div class="scene-gallery-body">
                   <div class="scene-pair" style="grid-template-columns: 1fr 1fr;">
@@ -628,6 +632,10 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                       <img src="assets/results/bachelors_unet.png" alt="bachelors U-Net prediction" class="scene-thumb-img compare-img" />
                       <span class="scene-thumb-label" style="color:var(--accent3);">U-Net (28.67 dB)</span>
                     </div>
+                    <div class="scene-thumb-wrap">
+                      <img src="assets/results/bachelors_attnres.png" alt="bachelors Attention-Residual U-Net prediction" class="scene-thumb-img compare-img" />
+                      <span class="scene-thumb-label" style="color:var(--accent2);">Attn-Res (31.80 dB)</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -636,7 +644,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
               <div class="scene-gallery-card">
                 <div class="scene-gallery-header">
                   <span class="scene-gallery-title">Scene 3: barbershop</span>
-                  <span class="scene-gallery-badge">CNN: 23.66 · U-Net: 23.99 dB</span>
+                  <span class="scene-gallery-badge">Attn-Res: 26.18 dB | 0.8150</span>
                 </div>
                 <div class="scene-gallery-body">
                   <div class="scene-pair" style="grid-template-columns: 1fr 1fr;">
@@ -656,13 +664,17 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                       <img src="assets/results/barbershop_unet.png" alt="barbershop U-Net prediction" class="scene-thumb-img compare-img" />
                       <span class="scene-thumb-label" style="color:var(--accent3);">U-Net (23.99 dB)</span>
                     </div>
+                    <div class="scene-thumb-wrap">
+                      <img src="assets/results/barbershop_attnres.png" alt="barbershop Attention-Residual U-Net prediction" class="scene-thumb-img compare-img" />
+                      <span class="scene-thumb-label" style="color:var(--accent2);">Attn-Res (26.18 dB)</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <p class="placeholder-note" style="color:var(--accent3); margin-top:1.5rem;">✔ Visual results loaded for Ground Truth, Naïve Sum, CNN, and U-Net. Attn-Res U-Net checkpoint outputs are still pending.</p>
+          <p class="placeholder-note" style="color:var(--accent3); margin-top:1.5rem;">✔ Visual results loaded for Ground Truth, Naïve Sum, CNN, U-Net, and Attention-Residual U-Net.</p>
         </div>
 
         <!-- Results Table -->
@@ -698,8 +710,8 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
               </tr>
               <tr class="best-row">
                 <td>Attn-Res U-Net ⭐</td>
-                <td>—</td>
-                <td>—</td>
+                <td><strong style="color:var(--accent3);">29.673</strong></td>
+                <td><strong style="color:var(--accent3);">0.8407</strong></td>
                 <td><strong>Proposed Model (Best)</strong></td>
               </tr>
             </tbody>
