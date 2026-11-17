@@ -137,7 +137,7 @@ def load_scene(scene_path):
     frames = []
     for index in range(128):
         image = photon[index].astype(np.float32)
-        image = image / (image.max() + 1e-8)
+        image = image / (255.0)
         frames.append(torch.from_numpy(image).permute(2, 0, 1))
     noisy = torch.cat(frames, dim=0).unsqueeze(0)
 

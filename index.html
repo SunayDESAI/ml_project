@@ -193,7 +193,7 @@
       <div class="container">
         <div class="section-label">03 · Preprocessing</div>
         <h2 class="section-title">From Photon Counts to Model Input</h2>
-        <p class="section-intro">Preprocessing transforms the raw 4-D bit-packed arrays into 384-channel tensors ready for each neural network using the same fixed decoding and per-frame normalization.</p>
+        <p class="section-intro">Preprocessing transforms the raw 4-D bit-packed arrays into 384-channel tensors ready for each neural network using the same fixed decoding and input scaling.</p>
 
         <div class="steps-timeline">
           <div class="step">
@@ -226,9 +226,9 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             <div class="step-num">4</div>
             <div class="step-body">
               <h4>Normalization</h4>
-              <p>Each decoded photon frame is converted to float and divided by its own maximum value. Ground-truth PNG values are divided by 255 to map to <code>[0, 1]</code>.</p>
+              <p>Each decoded photon frame is converted to float and divided by 255. Ground-truth PNG values are divided by 255 to map to <code>[0, 1]</code>.</p>
               <pre><code>frame = frame.astype(np.float32)
-frame = frame / (frame.max() + 1e-8)
+frame = frame / 255.0
 gt = gt_image.astype(np.float32) / 255.0</code></pre>
             </div>
           </div>
@@ -727,7 +727,7 @@ gt = gt_image.astype(np.float32) / 255.0</code></pre>
             <h4>Implementation Constraints</h4>
             <ul>
               <li>Each scene is loaded as one full 800×800 sample, so training requires substantial GPU memory</li>
-              <li>All three models normalize each frame by its own maximum value, which can change relative exposure between frames</li>
+              <li>All three models use fixed division by 255 for decoded photon frames and clean PNG targets</li>
               <li>VGG-16 perceptual loss requires downloading/loading frozen ImageNet weights before training</li>
             </ul>
           </div>
@@ -774,7 +774,7 @@ gt = gt_image.astype(np.float32) / 255.0</code></pre>
             </div>
             <div class="takeaway">
               <span class="tk-num">02</span>
-              <span>All three models use <code>np.unpackbits</code> and per-frame max normalization before forming the 384-channel input</span>
+              <span>All three models use <code>np.unpackbits</code> and divide decoded photon frames by 255 before forming the 384-channel input</span>
             </div>
             <div class="takeaway">
               <span class="tk-num">03</span>
@@ -843,7 +843,7 @@ photon = raw[-128:]
 # All three model scripts:
 photon = np.unpackbits(photon, axis=2)
 frames = [
-    frame.astype(np.float32) / (frame.max() + 1e-8)
+    frame.astype(np.float32) / 255.0
     for frame in photon
 ]
 
