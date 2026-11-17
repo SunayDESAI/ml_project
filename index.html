@@ -37,9 +37,9 @@
     <div class="photon-particles" id="particles"></div>
     <div class="hero-content">
       <h1>Single Photon<br/><span class="gradient-text">Image Reconstruction</span></h1>
-      <p class="hero-sub">Deep learning image reconstruction pipeline for the Single Photon Challenge: from statistical frame averaging and CNNs to U-Net, Attention U-Net, our proposed <strong>Attention-Residual U-Net</strong> (featuring GroupNorm &amp; Global Residual Learning), and Vision Transformers.</p>
+      <p class="hero-sub">Deep learning image reconstruction pipeline for the Single Photon Challenge: from statistical frame averaging and CNNs to U-Net and our proposed <strong>Attention-Residual U-Net</strong> (featuring GroupNorm &amp; Global Residual Learning).</p>
       <div class="hero-stats">
-        <div class="stat-pill"><span class="stat-num">6</span><span class="stat-lbl">Models</span></div>
+        <div class="stat-pill"><span class="stat-num">4</span><span class="stat-lbl">Models</span></div>
         <div class="stat-pill"><span class="stat-num">50</span><span class="stat-lbl">Epochs (Cosine)</span></div>
         <div class="stat-pill"><span class="stat-num">384</span><span class="stat-lbl">Input Channels</span></div>
         <div class="stat-pill"><span class="stat-num">800²</span><span class="stat-lbl">Resolution</span></div>
@@ -99,7 +99,7 @@
             <div class="pipe-step pipe-process">
               <div class="pipe-icon">🧠</div>
               <div class="pipe-label">Deep Learning Model</div>
-              <div class="pipe-sub">U-Net / Attention / Transformer</div>
+              <div class="pipe-sub">CNN / U-Net / Attn-Res U-Net</div>
             </div>
             <div class="pipe-arrow">↓</div>
             <div class="pipe-step pipe-output">
@@ -242,16 +242,14 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
       <div class="container">
         <div class="section-label">04 · Baseline &amp; Methods</div>
         <h2 class="section-title">Architectures &amp; Methodology</h2>
-        <p class="section-intro">From traditional statistical photon estimation to deep convolutional networks, our primary contribution in the challenge paper is an <strong>Attention Residual U-Net with Group Normalization and Global Residual Learning</strong>. We also explored Vision Transformers as an extended inquiry into global non-local self-attention.</p>
+        <p class="section-intro">From traditional statistical photon estimation to deep convolutional networks, our proposed architecture is an <strong>Attention Residual U-Net with Group Normalization and Global Residual Learning</strong>.</p>
 
         <div class="arch-tabs">
           <div class="tab-buttons">
             <button class="tab-btn" data-tab="naive">Naïve Baseline</button>
             <button class="tab-btn" data-tab="baseline">CNN</button>
             <button class="tab-btn" data-tab="unet">U-Net</button>
-            <button class="tab-btn" data-tab="attnunet">Attention U-Net</button>
-            <button class="tab-btn active" data-tab="attnres">Attn-Res U-Net (Paper ⭐)</button>
-            <button class="tab-btn" data-tab="transformer">Transformer (Ext.)</button>
+            <button class="tab-btn active" data-tab="attnres">Attn-Res U-Net (Proposed ⭐)</button>
           </div>
 
           <!-- TAB 1: NAIVE BASELINE -->
@@ -294,10 +292,10 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                 <ul>
                   <li>Input: 384 channels &rarr; Sequential Conv2D layers &rarr; 3-channel RGB</li>
                   <li>Plain feed-forward hierarchy without skip pathways</li>
-                  <li>Establishes baseline deep learning performance</li>
+                  <li><strong>Benchmark Score:</strong> Achieves an <strong>Average PSNR of 26.517 dB</strong> and <strong>SSIM of 0.7607</strong> across the 3 test scenes (a +5.56 dB and +0.468 SSIM gain over Naïve Sum).</li>
                 </ul>
                 <div class="arch-assumption">
-                  <strong>Limitation:</strong> Without encoder-decoder downsampling and skip connections, plain CNNs struggle to maintain multi-scale context and lose fine-grained spatial information.
+                  <strong>Limitation:</strong> While convolutions learn spatial denoising filters effectively, the absence of encoder-decoder multiscale pooling and skip pathways prevents the plain CNN from capturing long-range contextual relationships.
                 </div>
               </div>
               <div class="arch-diagram">
@@ -306,7 +304,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                   <div class="arch-conn">↓</div>
                   <div class="arch-block conv-block">Stacked Conv2D Layers<br/>(384 &rarr; 256 &rarr; 128 &rarr; 64 &rarr; 32)</div>
                   <div class="arch-conn">↓</div>
-                  <div class="arch-block output-block">(3, 800, 800)<br/>RGB Output</div>
+                  <div class="arch-block output-block">(3, 800, 800) RGB Output<br/>PSNR: 26.52 dB | SSIM: 0.7607</div>
                 </div>
               </div>
             </div>
@@ -343,42 +341,12 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             </div>
           </div>
 
-          <!-- TAB 4: ATTENTION U-NET -->
-          <div class="tab-content" id="tab-attnunet">
-            <div class="arch-layout">
-              <div class="arch-desc">
-                <h3>Attention U-Net</h3>
-                <p>Introduces <strong>spatial attention gates</strong> to selectively filter skip connections prior to concatenation. The gating mechanism uses coarser decoder features to highlight informative regions in the encoder features.</p>
-                <ul>
-                  <li>Computes attention coefficients: &alpha; = &sigma;(&psi;(ReLU(W<sub>g</sub>g + W<sub>x</sub>x)))</li>
-                  <li>Refined feature maps: x&#770; = &alpha; &odot; x</li>
-                  <li>Suppresses sparse noise and background zeros while amplifying photon hit signals</li>
-                </ul>
-                <div class="arch-assumption">
-                  <strong>Why appropriate:</strong> With photon data being over 90% sparse, attention gates prevent noisy and non-informative background features from overwhelming the decoder.
-                </div>
-              </div>
-              <div class="arch-diagram">
-                <div class="attn-vis">
-                  <div class="attn-row">
-                    <div class="attn-box enc">Encoder Feature (x)</div>
-                    <div class="attn-box dec">Decoder Gating (g)</div>
-                  </div>
-                  <div class="attn-arrow">↓ W<sub>g</sub>g + W<sub>x</sub>x &rarr; ReLU &rarr; &psi; &rarr; &sigma; ↓</div>
-                  <div class="attn-box gate">Spatial Attention Map (&alpha;)<br/>x&#770; = &alpha; &odot; x</div>
-                  <div class="attn-arrow">↓</div>
-                  <div class="attn-box concat">Concat with Upsampled Decoder</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- TAB 5: ATTENTION RESIDUAL U-NET (PAPER'S CORE PROPOSAL) -->
+          <!-- TAB 4: ATTENTION RESIDUAL U-NET (PROPOSED ARCHITECTURE) -->
           <div class="tab-content active" id="tab-attnres">
             <div class="arch-layout">
               <div class="arch-desc">
-                <h3>Attention Residual U-Net <span style="color:var(--accent3);font-size:0.85rem;font-weight:700;">(Paper's Proposed Model)</span></h3>
-                <p>Our proposed architecture in the challenge paper integrates <strong>residual blocks with Group Normalization</strong>, <strong>attention-gated skip connections</strong>, and an explicit <strong>global residual shortcut</strong>.</p>
+                <h3>Attention Residual U-Net <span style="color:var(--accent3);font-size:0.85rem;font-weight:700;">(Proposed Model)</span></h3>
+                <p>Our proposed architecture integrates <strong>residual blocks with Group Normalization</strong>, <strong>attention-gated skip connections</strong>, and an explicit <strong>global residual shortcut</strong>.</p>
                 <ul>
                   <li><strong>Residual Unit:</strong> y = &sigma;(GN(Conv<sub>2</sub>(&sigma;(GN(Conv<sub>1</sub>(x)))))) + S(x) with GroupNorm for small batch stability and 1&times;1 conv projection for dimension matching.</li>
                   <li><strong>Encoder Hierarchy:</strong> 3 stages (128 &rarr; 256 &rarr; 512 channels) followed by 2&times;2 Max-Pooling.</li>
@@ -412,41 +380,12 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
               </div>
             </div>
           </div>
-
-          <!-- TAB 6: TRANSFORMER (EXTENDED STUDY) -->
-          <div class="tab-content" id="tab-transformer">
-            <div class="arch-layout">
-              <div class="arch-desc">
-                <h3>Vision Transformer <span style="color:var(--accent);font-size:0.85rem;font-weight:600;">(Extended Exploration)</span></h3>
-                <p>Investigated beyond the core paper submission to evaluate non-local global self-attention mechanisms against convolutional inductive biases.</p>
-                <ul>
-                  <li>Decomposes photon feature maps into non-overlapping spatial patches</li>
-                  <li>Multi-Head Self-Attention (MHSA) computes long-range token relationships</li>
-                  <li>Evaluates whether global spatial context can overcome photon arrival sparsity</li>
-                </ul>
-                <div class="arch-assumption">
-                  <strong>Observation:</strong> While capable of modeling distant correlations, transformers require substantially larger training corpora and compute to outperform attention-gated convolutional models on extreme low-count photon arrays.
-                </div>
-              </div>
-              <div class="arch-diagram">
-                <div class="transformer-vis">
-                  <div class="trans-step">Input Patch Projection &amp; Positional Encoding</div>
-                  <div class="trans-arrow">↓</div>
-                  <div class="trans-step">Multi-Head Self-Attention (MHSA) Layers</div>
-                  <div class="trans-arrow">↓</div>
-                  <div class="trans-step">Feed-Forward Network (FFN) + LayerNorm</div>
-                  <div class="trans-arrow">↓</div>
-                  <div class="trans-step">Token Reconstruction &rarr; RGB Image</div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Loss Functions & Optimization -->
         <div class="loss-section">
           <h3>Loss Formulation &amp; Training Strategy</h3>
-          <p>Supervision combines multi-scale pixel, structural, and perceptual losses as formulated in Equation 7 of our paper:</p>
+          <p>Supervision combines multi-scale pixel, structural, and perceptual losses:</p>
           <div class="loss-eq">&Lscr; = 0.7 &middot; &Lscr;<sub>L1</sub> + 0.2 &middot; &Lscr;<sub>SSIM</sub> + 0.1 &middot; &Lscr;<sub>VGG</sub></div>
           <div class="loss-cards">
             <div class="loss-card">
@@ -463,7 +402,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             </div>
           </div>
 
-          <!-- Optimization Details from Paper Section 3.3 -->
+          <!-- Optimization Details -->
           <div class="info-cards" style="margin-top:2rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); display:grid;">
             <div class="info-card">
               <div class="info-icon">⚙</div>
@@ -584,36 +523,32 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
 
           <div class="compare-controls">
             <select id="leftArch" class="arch-select">
-              <option value="gt" selected>Ground Truth (Clean PNG)</option>
+              <option value="gt">Ground Truth (Clean PNG)</option>
               <option value="naive">Naïve Sum (256 frames)</option>
-              <option value="cnn">CNN</option>
+              <option value="cnn" selected>CNN</option>
               <option value="unet">U-Net</option>
-              <option value="attnunet">Attention U-Net</option>
-              <option value="attnres">Attn-Res U-Net (Paper ⭐)</option>
-              <option value="transformer">Vision Transformer (Ext.)</option>
+              <option value="attnres">Attn-Res U-Net (Proposed ⭐)</option>
             </select>
             <span class="vs-badge">vs</span>
             <select id="rightArch" class="arch-select">
               <option value="gt">Ground Truth (Clean PNG)</option>
-              <option value="naive" selected>Naïve Sum (256 frames)</option>
+              <option value="naive">Naïve Sum (256 frames)</option>
               <option value="cnn">CNN</option>
               <option value="unet">U-Net</option>
-              <option value="attnunet">Attention U-Net</option>
-              <option value="attnres">Attn-Res U-Net (Paper ⭐)</option>
-              <option value="transformer">Vision Transformer (Ext.)</option>
+              <option value="attnres" selected>Attn-Res U-Net (Proposed ⭐)</option>
             </select>
           </div>
 
           <!-- Side by Side Panel (Metrics outside the image container for complete visibility) -->
           <div class="compare-panel">
             <div class="compare-side">
-              <div class="compare-label" id="leftLabel">Ground Truth (Clean PNG)</div>
+              <div class="compare-label" id="leftLabel">CNN</div>
               <div class="compare-img-wrap">
-                <img id="leftImg" src="assets/results/attic_gt.png" alt="Left architecture output" class="compare-img"/>
+                <img id="leftImg" src="assets/results/attic_cnn.png" alt="Left architecture output" class="compare-img"/>
               </div>
               <div class="compare-stats-bar">
-                <span class="overlay-metric" id="leftPSNR">PSNR: &infin; dB</span>
-                <span class="overlay-metric" id="leftSSIM">SSIM: 1.0000</span>
+                <span class="overlay-metric" id="leftPSNR">PSNR: 28.41 dB</span>
+                <span class="overlay-metric" id="leftSSIM">SSIM: 0.7470</span>
               </div>
             </div>
 
@@ -624,13 +559,13 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             </div>
 
             <div class="compare-side">
-              <div class="compare-label" id="rightLabel">Naïve Sum (256 frames)</div>
+              <div class="compare-label" id="rightLabel">Attn-Res U-Net (Proposed ⭐)</div>
               <div class="compare-img-wrap">
-                <img id="rightImg" src="assets/results/attic_naivesum.png" alt="Right architecture output" class="compare-img"/>
+                <img id="rightImg" src="assets/placeholder_gen.svg" alt="Right architecture output" class="compare-img"/>
               </div>
               <div class="compare-stats-bar">
-                <span class="overlay-metric" id="rightPSNR">PSNR: 21.769 dB</span>
-                <span class="overlay-metric" id="rightSSIM">SSIM: 0.3077</span>
+                <span class="overlay-metric" id="rightPSNR">PSNR: — dB</span>
+                <span class="overlay-metric" id="rightSSIM">SSIM: —</span>
               </div>
             </div>
           </div>
@@ -654,25 +589,29 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
 
           <!-- Direct 3-Scene Gallery -->
           <div style="margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--border);">
-            <h4>🖼 All Held-out Test Scenes (Ground Truth vs. Naïve Sum)</h4>
-            <p style="color:var(--text-muted); font-size:0.88rem;">Side-by-side view of all three test scenes evaluated in our Kaggle benchmark.</p>
+            <h4>🖼 All Held-out Test Scenes (Ground Truth vs. Naïve Sum vs. CNN)</h4>
+            <p style="color:var(--text-muted); font-size:0.88rem;">Side-by-side view of all three test scenes evaluated across Ground Truth, Naïve Sum, and CNN reconstruction.</p>
             
             <div class="scene-gallery-grid">
               <!-- Card 1: Attic -->
               <div class="scene-gallery-card">
                 <div class="scene-gallery-header">
                   <span class="scene-gallery-title">Scene 1: attic</span>
-                  <span class="scene-gallery-badge">PSNR: 21.77 dB | SSIM: 0.3077</span>
+                  <span class="scene-gallery-badge">CNN: 28.41 dB | 0.7470</span>
                 </div>
                 <div class="scene-gallery-body">
-                  <div class="scene-pair">
+                  <div class="scene-pair" style="grid-template-columns: 1fr 1fr 1fr;">
                     <div class="scene-thumb-wrap">
                       <img src="assets/results/attic_gt.png" alt="attic ground truth" class="scene-thumb-img compare-img" />
                       <span class="scene-thumb-label">Ground Truth</span>
                     </div>
                     <div class="scene-thumb-wrap">
                       <img src="assets/results/attic_naivesum.png" alt="attic naivesum" class="scene-thumb-img compare-img" />
-                      <span class="scene-thumb-label">Naïve Sum</span>
+                      <span class="scene-thumb-label">Naïve Sum (21.77 dB)</span>
+                    </div>
+                    <div class="scene-thumb-wrap">
+                      <img src="assets/results/attic_cnn.png" alt="attic cnn" class="scene-thumb-img compare-img" />
+                      <span class="scene-thumb-label" style="color:var(--accent);">CNN (28.41 dB)</span>
                     </div>
                   </div>
                 </div>
@@ -682,17 +621,21 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
               <div class="scene-gallery-card">
                 <div class="scene-gallery-header">
                   <span class="scene-gallery-title">Scene 2: bachelors-quarters</span>
-                  <span class="scene-gallery-badge">PSNR: 22.15 dB | SSIM: 0.2611</span>
+                  <span class="scene-gallery-badge">CNN: 27.48 dB | 0.8110</span>
                 </div>
                 <div class="scene-gallery-body">
-                  <div class="scene-pair">
+                  <div class="scene-pair" style="grid-template-columns: 1fr 1fr 1fr;">
                     <div class="scene-thumb-wrap">
                       <img src="assets/results/bachelors_gt.png" alt="bachelors ground truth" class="scene-thumb-img compare-img" />
                       <span class="scene-thumb-label">Ground Truth</span>
                     </div>
                     <div class="scene-thumb-wrap">
                       <img src="assets/results/bachelors_naivesum.png" alt="bachelors naivesum" class="scene-thumb-img compare-img" />
-                      <span class="scene-thumb-label">Naïve Sum</span>
+                      <span class="scene-thumb-label">Naïve Sum (22.15 dB)</span>
+                    </div>
+                    <div class="scene-thumb-wrap">
+                      <img src="assets/results/bachelors_cnn.png" alt="bachelors cnn" class="scene-thumb-img compare-img" />
+                      <span class="scene-thumb-label" style="color:var(--accent);">CNN (27.48 dB)</span>
                     </div>
                   </div>
                 </div>
@@ -702,17 +645,21 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
               <div class="scene-gallery-card">
                 <div class="scene-gallery-header">
                   <span class="scene-gallery-title">Scene 3: barbershop</span>
-                  <span class="scene-gallery-badge">PSNR: 18.94 dB | SSIM: 0.3085</span>
+                  <span class="scene-gallery-badge">CNN: 23.66 dB | 0.7240</span>
                 </div>
                 <div class="scene-gallery-body">
-                  <div class="scene-pair">
+                  <div class="scene-pair" style="grid-template-columns: 1fr 1fr 1fr;">
                     <div class="scene-thumb-wrap">
                       <img src="assets/results/barbershop_gt.png" alt="barbershop ground truth" class="scene-thumb-img compare-img" />
                       <span class="scene-thumb-label">Ground Truth</span>
                     </div>
                     <div class="scene-thumb-wrap">
                       <img src="assets/results/barbershop_naivesum.png" alt="barbershop naivesum" class="scene-thumb-img compare-img" />
-                      <span class="scene-thumb-label">Naïve Sum</span>
+                      <span class="scene-thumb-label">Naïve Sum (18.94 dB)</span>
+                    </div>
+                    <div class="scene-thumb-wrap">
+                      <img src="assets/results/barbershop_cnn.png" alt="barbershop cnn" class="scene-thumb-img compare-img" />
+                      <span class="scene-thumb-label" style="color:var(--accent);">CNN (23.66 dB)</span>
                     </div>
                   </div>
                 </div>
@@ -720,7 +667,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             </div>
           </div>
 
-          <p class="placeholder-note" style="color:var(--accent3); margin-top:1.5rem;">✔ High-resolution visual results loaded for Ground Truth and Naïve Sum. Deep learning model checkpoints can be compared above.</p>
+          <p class="placeholder-note" style="color:var(--accent3); margin-top:1.5rem;">✔ High-resolution visual results loaded for Ground Truth, Naïve Sum, and CNN. Deep learning model checkpoints can be compared above.</p>
         </div>
 
         <!-- Results Table -->
@@ -744,15 +691,15 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                 <td><strong style="color:var(--accent);">0.2924</strong></td>
                 <td>—</td>
                 <td>—</td>
-                <td>Verified Kaggle Baseline Score</td>
+                <td>Statistical Baseline Score</td>
               </tr>
               <tr class="baseline-row">
-                <td>CNN</td>
+                <td><strong>Convolutional Neural Network (CNN)</strong></td>
+                <td><strong style="color:var(--accent);">26.517</strong></td>
+                <td><strong style="color:var(--accent);">0.7607</strong></td>
                 <td>—</td>
                 <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td>Feed-Forward Baseline</td>
+                <td>Deep Learning Baseline (+5.56 dB)</td>
               </tr>
               <tr>
                 <td>U-Net</td>
@@ -762,44 +709,29 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                 <td>—</td>
                 <td>Encoder-Decoder with Skips</td>
               </tr>
-              <tr>
-                <td>Attention U-Net</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td>Spatial Gated Skips</td>
-              </tr>
               <tr class="best-row">
                 <td>Attn-Res U-Net ⭐</td>
                 <td>—</td>
                 <td>—</td>
                 <td>—</td>
                 <td>—</td>
-                <td><strong>Paper's Proposed Model (Best)</strong></td>
-              </tr>
-              <tr>
-                <td>Vision Transformer</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td>Extended Non-Local Exploration</td>
+                <td><strong>Proposed Model (Best)</strong></td>
               </tr>
             </tbody>
           </table>
 
-          <!-- Scene-level breakdown table for Naive Sum -->
+          <!-- Scene-level breakdown table for Naive Sum & CNN -->
           <div style="margin-top:2rem;">
-            <h4>Naïve Sum Baseline: Per-Scene Test Performance (batch_size = 256)</h4>
+            <h4>Per-Scene Test Performance Comparison (Naïve Sum vs. CNN)</h4>
             <table class="results-table" style="margin-top:0.75rem;">
               <thead>
                 <tr>
                   <th>Scene Name</th>
-                  <th>PSNR (dB)</th>
-                  <th>SSIM</th>
-                  <th>Camera Response</th>
-                  <th>Tonemapping</th>
+                  <th>Naïve Sum PSNR</th>
+                  <th>Naïve Sum SSIM</th>
+                  <th>CNN PSNR</th>
+                  <th>CNN SSIM</th>
+                  <th>CNN Gain (&Delta;PSNR)</th>
                 </tr>
               </thead>
               <tbody>
@@ -807,29 +739,33 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                   <td><code>attic</code></td>
                   <td>21.769 dB</td>
                   <td>0.3077</td>
-                  <td><code>spc_avg_to_rgb (factor=0.5)</code></td>
-                  <td><code>linearrgb_to_srgb</code></td>
+                  <td><strong>28.410 dB</strong></td>
+                  <td><strong>0.7470</strong></td>
+                  <td style="color:var(--accent3); font-weight:700;">+6.64 dB</td>
                 </tr>
                 <tr>
                   <td><code>bachelors-quarters</code></td>
                   <td>22.152 dB</td>
                   <td>0.2611</td>
-                  <td><code>spc_avg_to_rgb (factor=0.5)</code></td>
-                  <td><code>linearrgb_to_srgb</code></td>
+                  <td><strong>27.480 dB</strong></td>
+                  <td><strong>0.8110</strong></td>
+                  <td style="color:var(--accent3); font-weight:700;">+5.33 dB</td>
                 </tr>
                 <tr>
                   <td><code>barbershop</code></td>
                   <td>18.943 dB</td>
                   <td>0.3085</td>
-                  <td><code>spc_avg_to_rgb (factor=0.5)</code></td>
-                  <td><code>linearrgb_to_srgb</code></td>
+                  <td><strong>23.660 dB</strong></td>
+                  <td><strong>0.7240</strong></td>
+                  <td style="color:var(--accent3); font-weight:700;">+4.72 dB</td>
                 </tr>
                 <tr style="background:rgba(0,212,255,0.06); font-weight:700;">
                   <td style="color:var(--accent);">Test Set Average (3 scenes)</td>
                   <td style="color:var(--accent);">20.955 dB</td>
                   <td style="color:var(--accent);">0.2924</td>
-                  <td>—</td>
-                  <td>—</td>
+                  <td style="color:var(--accent3);">26.517 dB</td>
+                  <td style="color:var(--accent3);">0.7607</td>
+                  <td style="color:var(--accent3);">+5.56 dB</td>
                 </tr>
               </tbody>
             </table>
@@ -869,7 +805,6 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             <ul>
               <li>Results cannot be treated as proof of causation between architecture choice and quality</li>
               <li>Challenge leaderboard ranking does not fully reflect real-world deployment performance</li>
-              <li>Transformer results may be limited by dataset size; more data could change rankings</li>
               <li>PSNR/SSIM do not capture all aspects of perceptual quality</li>
             </ul>
           </div>

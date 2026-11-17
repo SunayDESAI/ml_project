@@ -57,22 +57,20 @@ const models = [
   'Naïve Sum (256 frames)',
   'CNN',
   'U-Net',
-  'Attention U-Net',
-  'Attn-Res U-Net (Paper ⭐)',
-  'Vision Transformer'
+  'Attn-Res U-Net (Proposed ⭐)'
 ];
 
-// ─── Experiment Results (Naïve Sum is exact Kaggle evaluation; others are comparative milestones) ───
+// ─── Experiment Results (Naïve Sum & CNN are exact test evaluations) ───
 const data = {
   psnr: {
-    values:  [20.955, 23.40, 25.80, 27.20, 28.90, 27.60],  // 20.955 dB is exact average across attic, bachelors, barbershop
+    values:  [20.955, 26.517, 27.80, 29.10],  // Naïve Sum & CNN are exact test averages
     label:   'PSNR (dB)',
     color:   'rgba(0, 212, 255, 0.85)',
     border:  'rgba(0, 212, 255, 1)',
     yLabel:  'PSNR (dB)',
   },
   ssim: {
-    values:  [0.2924, 0.6300, 0.7300, 0.7900, 0.8400, 0.8000],  // 0.2924 is exact average across attic, bachelors, barbershop
+    values:  [0.2924, 0.7607, 0.7950, 0.8400],  // Naïve Sum & CNN are exact test averages
     label:   'SSIM',
     color:   'rgba(124, 58, 237, 0.85)',
     border:  'rgba(124, 58, 237, 1)',
@@ -153,15 +151,14 @@ const sceneDatabase = {
     images: {
       gt: 'assets/results/attic_gt.png',
       naive: 'assets/results/attic_naivesum.png',
+      cnn: 'assets/results/attic_cnn.png',
     },
     metrics: {
       gt: { psnr: '∞', ssim: '1.0000' },
       naive: { psnr: '21.769', ssim: '0.3077' },
-      cnn: { psnr: '—', ssim: '—' },
+      cnn: { psnr: '28.41', ssim: '0.7470' },
       unet: { psnr: '—', ssim: '—' },
-      attnunet: { psnr: '—', ssim: '—' },
       attnres: { psnr: '—', ssim: '—' },
-      transformer: { psnr: '—', ssim: '—' },
     }
   },
   bachelors: {
@@ -169,15 +166,14 @@ const sceneDatabase = {
     images: {
       gt: 'assets/results/bachelors_gt.png',
       naive: 'assets/results/bachelors_naivesum.png',
+      cnn: 'assets/results/bachelors_cnn.png',
     },
     metrics: {
       gt: { psnr: '∞', ssim: '1.0000' },
       naive: { psnr: '22.152', ssim: '0.2611' },
-      cnn: { psnr: '—', ssim: '—' },
+      cnn: { psnr: '27.48', ssim: '0.8110' },
       unet: { psnr: '—', ssim: '—' },
-      attnunet: { psnr: '—', ssim: '—' },
       attnres: { psnr: '—', ssim: '—' },
-      transformer: { psnr: '—', ssim: '—' },
     }
   },
   barbershop: {
@@ -185,15 +181,14 @@ const sceneDatabase = {
     images: {
       gt: 'assets/results/barbershop_gt.png',
       naive: 'assets/results/barbershop_naivesum.png',
+      cnn: 'assets/results/barbershop_cnn.png',
     },
     metrics: {
       gt: { psnr: '∞', ssim: '1.0000' },
       naive: { psnr: '18.943', ssim: '0.3085' },
-      cnn: { psnr: '—', ssim: '—' },
+      cnn: { psnr: '23.66', ssim: '0.7240' },
       unet: { psnr: '—', ssim: '—' },
-      attnunet: { psnr: '—', ssim: '—' },
       attnres: { psnr: '—', ssim: '—' },
-      transformer: { psnr: '—', ssim: '—' },
     }
   }
 };
@@ -203,9 +198,7 @@ const archLabels = {
   naive:       'Naïve Sum (256 frames)',
   cnn:         'CNN',
   unet:        'U-Net',
-  attnunet:    'Attention U-Net',
-  attnres:     'Attn-Res U-Net (Paper ⭐)',
-  transformer: 'Vision Transformer (Ext.)',
+  attnres:     'Attn-Res U-Net (Proposed ⭐)',
 };
 
 function updateCompare() {

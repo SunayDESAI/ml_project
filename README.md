@@ -2,7 +2,7 @@
 
 **ES 335 Course Project**
 
-A deep learning project for reconstructing high-quality RGB images from sparse single-photon measurements, using U-Net, Residual U-Net, Attention U-Net, Attention-Residual U-Net, and Vision Transformer architectures.
+A deep learning project for reconstructing high-quality RGB images from sparse single-photon measurements, comparing statistical frame averaging, CNN, U-Net, and Attention-Residual U-Net architectures.
 
 ## 🌐 Live Site
 
