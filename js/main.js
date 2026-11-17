@@ -60,17 +60,17 @@ const models = [
   'Attn-Res U-Net (Proposed ⭐)'
 ];
 
-// ─── Experiment Results (Naïve Sum & CNN are exact test evaluations) ───
+// ─── Experiment Results (three-scene test averages) ───
 const data = {
   psnr: {
-    values:  [20.955, 26.517, 27.80, 29.10],  // Naïve Sum & CNN are exact test averages
+    values:  [20.955, 26.517, 27.493, 29.10],
     label:   'PSNR (dB)',
     color:   'rgba(0, 212, 255, 0.85)',
     border:  'rgba(0, 212, 255, 1)',
     yLabel:  'PSNR (dB)',
   },
   ssim: {
-    values:  [0.2924, 0.7607, 0.7950, 0.8400],  // Naïve Sum & CNN are exact test averages
+    values:  [0.2924, 0.7607, 0.7863, 0.8400],
     label:   'SSIM',
     color:   'rgba(124, 58, 237, 0.85)',
     border:  'rgba(124, 58, 237, 1)',
@@ -152,12 +152,13 @@ const sceneDatabase = {
       gt: 'assets/results/attic_gt.png',
       naive: 'assets/results/attic_naivesum.png',
       cnn: 'assets/results/attic_cnn.png',
+      unet: 'assets/results/attic_unet.png',
     },
     metrics: {
       gt: { psnr: '∞', ssim: '1.0000' },
       naive: { psnr: '21.769', ssim: '0.3077' },
       cnn: { psnr: '28.41', ssim: '0.7470' },
-      unet: { psnr: '—', ssim: '—' },
+      unet: { psnr: '29.82', ssim: '0.7940' },
       attnres: { psnr: '—', ssim: '—' },
     }
   },
@@ -167,12 +168,13 @@ const sceneDatabase = {
       gt: 'assets/results/bachelors_gt.png',
       naive: 'assets/results/bachelors_naivesum.png',
       cnn: 'assets/results/bachelors_cnn.png',
+      unet: 'assets/results/bachelors_unet.png',
     },
     metrics: {
       gt: { psnr: '∞', ssim: '1.0000' },
       naive: { psnr: '22.152', ssim: '0.2611' },
       cnn: { psnr: '27.48', ssim: '0.8110' },
-      unet: { psnr: '—', ssim: '—' },
+      unet: { psnr: '28.67', ssim: '0.8310' },
       attnres: { psnr: '—', ssim: '—' },
     }
   },
@@ -182,12 +184,13 @@ const sceneDatabase = {
       gt: 'assets/results/barbershop_gt.png',
       naive: 'assets/results/barbershop_naivesum.png',
       cnn: 'assets/results/barbershop_cnn.png',
+      unet: 'assets/results/barbershop_unet.png',
     },
     metrics: {
       gt: { psnr: '∞', ssim: '1.0000' },
       naive: { psnr: '18.943', ssim: '0.3085' },
       cnn: { psnr: '23.66', ssim: '0.7240' },
-      unet: { psnr: '—', ssim: '—' },
+      unet: { psnr: '23.99', ssim: '0.7340' },
       attnres: { psnr: '—', ssim: '—' },
     }
   }
@@ -228,11 +231,6 @@ function updateCompare() {
   document.getElementById('rightPSNR').textContent  = 'PSNR: ' + rightM.psnr + (rightM.psnr !== '—' && rightM.psnr !== '∞' ? ' dB' : (rightM.psnr === '∞' ? ' dB' : ''));
   document.getElementById('rightSSIM').textContent  = 'SSIM: ' + rightM.ssim;
 
-  // Update split slider images if present
-  const splitGt = document.getElementById('splitImgGt');
-  const splitNaive = document.getElementById('splitImgNaive');
-  if (splitGt && currentScene.images.gt) splitGt.src = currentScene.images.gt;
-  if (splitNaive && currentScene.images.naive) splitNaive.src = currentScene.images.naive;
 }
 
 if (document.getElementById('sceneSelect')) {
@@ -242,19 +240,7 @@ document.getElementById('leftArch').addEventListener('change',  updateCompare);
 document.getElementById('rightArch').addEventListener('change', updateCompare);
 updateCompare();  // initial render
 
-/* ─── 7. Interactive Before/After Split Slider logic ─── */
-const sliderRange = document.getElementById('sliderRange');
-const sliderHandle = document.getElementById('sliderHandle');
-const sliderNaive = document.getElementById('splitImgNaive');
-if (sliderRange && sliderHandle && sliderNaive) {
-  sliderRange.addEventListener('input', (e) => {
-    const val = e.target.value;
-    sliderHandle.style.left = `${val}%`;
-    sliderNaive.style.clipPath = `polygon(0 0, ${val}% 0, ${val}% 100%, 0 100%)`;
-  });
-}
-
-/* ─── 8. Low-light Exposure Booster ─── */
+/* ─── 7. Low-light Exposure Booster ─── */
 const exposureFilters = {
   normal: 'none',
   boost: 'brightness(1.35) contrast(1.15)',
@@ -271,7 +257,7 @@ document.querySelectorAll('.exposure-btn').forEach(btn => {
   });
 });
 
-/* ─── 9. Scroll-reveal animation ─── */
+/* ─── 8. Scroll-reveal animation ─── */
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(e => {
     if (e.isIntersecting) {

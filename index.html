@@ -486,7 +486,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
       <div class="container">
         <div class="section-label">06 · Results</div>
         <h2 class="section-title">Model Comparison</h2>
-        <p class="section-intro">Compare all five architectures across PSNR, MS-SSIM, and LPIPS on our local held-out validation scenes. Values shown are illustrative placeholders — update with your actual numbers.</p>
+        <p class="section-intro">Compare the four architectures across PSNR and SSIM on our held-out test scenes. U-Net values are the three-scene averages from the supplied predictions; MS-SSIM and LPIPS remain unavailable.</p>
 
         <!-- Interactive Chart -->
         <div class="chart-controls">
@@ -570,37 +570,20 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             </div>
           </div>
 
-          <!-- Interactive Before/After Split Reveal Slider -->
-          <div class="slider-wrap-box">
-            <h4>↔ Interactive Before / After Split Slider</h4>
-            <p>Drag the slider handle horizontally across the scene to directly reveal the single-photon Poisson noise and detail degradation in the Naïve Sum baseline versus clean Ground Truth.</p>
-            
-            <div class="slider-container" id="splitSliderBox">
-              <img id="splitImgGt" src="assets/results/attic_gt.png" alt="Ground truth" class="slider-img slider-img-gt compare-img"/>
-              <img id="splitImgNaive" src="assets/results/attic_naivesum.png" alt="Naive sum reconstruction" class="slider-img slider-img-naive compare-img"/>
-              <div class="slider-handle" id="sliderHandle"></div>
-              <input type="range" min="0" max="100" value="50" class="slider-range-input" id="sliderRange" aria-label="Split comparison slider" />
-            </div>
-            <div class="slider-labels-row">
-              <span style="color:var(--accent);">&larr; Left: Naïve Sum Reconstruction</span>
-              <span style="color:var(--accent3);">Right: Ground Truth &rarr;</span>
-            </div>
-          </div>
-
           <!-- Direct 3-Scene Gallery -->
           <div style="margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--border);">
-            <h4>🖼 All Held-out Test Scenes (Ground Truth vs. Naïve Sum vs. CNN)</h4>
-            <p style="color:var(--text-muted); font-size:0.88rem;">Side-by-side view of all three test scenes evaluated across Ground Truth, Naïve Sum, and CNN reconstruction.</p>
+            <h4>🖼 All Held-out Test Scenes (Ground Truth vs. Naïve Sum vs. CNN vs. U-Net)</h4>
+            <p style="color:var(--text-muted); font-size:0.88rem;">Side-by-side view of all three test scenes evaluated across Ground Truth, Naïve Sum, CNN, and U-Net reconstruction.</p>
             
             <div class="scene-gallery-grid">
               <!-- Card 1: Attic -->
               <div class="scene-gallery-card">
                 <div class="scene-gallery-header">
                   <span class="scene-gallery-title">Scene 1: attic</span>
-                  <span class="scene-gallery-badge">CNN: 28.41 dB | 0.7470</span>
+                  <span class="scene-gallery-badge">CNN: 28.41 · U-Net: 29.82 dB</span>
                 </div>
                 <div class="scene-gallery-body">
-                  <div class="scene-pair" style="grid-template-columns: 1fr 1fr 1fr;">
+                  <div class="scene-pair" style="grid-template-columns: 1fr 1fr;">
                     <div class="scene-thumb-wrap">
                       <img src="assets/results/attic_gt.png" alt="attic ground truth" class="scene-thumb-img compare-img" />
                       <span class="scene-thumb-label">Ground Truth</span>
@@ -613,6 +596,10 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                       <img src="assets/results/attic_cnn.png" alt="attic cnn" class="scene-thumb-img compare-img" />
                       <span class="scene-thumb-label" style="color:var(--accent);">CNN (28.41 dB)</span>
                     </div>
+                    <div class="scene-thumb-wrap">
+                      <img src="assets/results/attic_unet.png" alt="attic U-Net prediction" class="scene-thumb-img compare-img" />
+                      <span class="scene-thumb-label" style="color:var(--accent3);">U-Net (29.82 dB)</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -621,10 +608,10 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
               <div class="scene-gallery-card">
                 <div class="scene-gallery-header">
                   <span class="scene-gallery-title">Scene 2: bachelors-quarters</span>
-                  <span class="scene-gallery-badge">CNN: 27.48 dB | 0.8110</span>
+                  <span class="scene-gallery-badge">CNN: 27.48 · U-Net: 28.67 dB</span>
                 </div>
                 <div class="scene-gallery-body">
-                  <div class="scene-pair" style="grid-template-columns: 1fr 1fr 1fr;">
+                  <div class="scene-pair" style="grid-template-columns: 1fr 1fr;">
                     <div class="scene-thumb-wrap">
                       <img src="assets/results/bachelors_gt.png" alt="bachelors ground truth" class="scene-thumb-img compare-img" />
                       <span class="scene-thumb-label">Ground Truth</span>
@@ -637,6 +624,10 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                       <img src="assets/results/bachelors_cnn.png" alt="bachelors cnn" class="scene-thumb-img compare-img" />
                       <span class="scene-thumb-label" style="color:var(--accent);">CNN (27.48 dB)</span>
                     </div>
+                    <div class="scene-thumb-wrap">
+                      <img src="assets/results/bachelors_unet.png" alt="bachelors U-Net prediction" class="scene-thumb-img compare-img" />
+                      <span class="scene-thumb-label" style="color:var(--accent3);">U-Net (28.67 dB)</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -645,10 +636,10 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
               <div class="scene-gallery-card">
                 <div class="scene-gallery-header">
                   <span class="scene-gallery-title">Scene 3: barbershop</span>
-                  <span class="scene-gallery-badge">CNN: 23.66 dB | 0.7240</span>
+                  <span class="scene-gallery-badge">CNN: 23.66 · U-Net: 23.99 dB</span>
                 </div>
                 <div class="scene-gallery-body">
-                  <div class="scene-pair" style="grid-template-columns: 1fr 1fr 1fr;">
+                  <div class="scene-pair" style="grid-template-columns: 1fr 1fr;">
                     <div class="scene-thumb-wrap">
                       <img src="assets/results/barbershop_gt.png" alt="barbershop ground truth" class="scene-thumb-img compare-img" />
                       <span class="scene-thumb-label">Ground Truth</span>
@@ -661,13 +652,17 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                       <img src="assets/results/barbershop_cnn.png" alt="barbershop cnn" class="scene-thumb-img compare-img" />
                       <span class="scene-thumb-label" style="color:var(--accent);">CNN (23.66 dB)</span>
                     </div>
+                    <div class="scene-thumb-wrap">
+                      <img src="assets/results/barbershop_unet.png" alt="barbershop U-Net prediction" class="scene-thumb-img compare-img" />
+                      <span class="scene-thumb-label" style="color:var(--accent3);">U-Net (23.99 dB)</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <p class="placeholder-note" style="color:var(--accent3); margin-top:1.5rem;">✔ High-resolution visual results loaded for Ground Truth, Naïve Sum, and CNN. Deep learning model checkpoints can be compared above.</p>
+          <p class="placeholder-note" style="color:var(--accent3); margin-top:1.5rem;">✔ Visual results loaded for Ground Truth, Naïve Sum, CNN, and U-Net. Attn-Res U-Net checkpoint outputs are still pending.</p>
         </div>
 
         <!-- Results Table -->
@@ -679,8 +674,6 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                 <th>Architecture</th>
                 <th>PSNR (dB) &uarr;</th>
                 <th>SSIM &uarr;</th>
-                <th>MS-SSIM &uarr;</th>
-                <th>LPIPS &darr;</th>
                 <th>Status / Role</th>
               </tr>
             </thead>
@@ -689,30 +682,22 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                 <td><strong>Naïve Sum Baseline (256 frames)</strong></td>
                 <td><strong style="color:var(--accent);">20.955</strong></td>
                 <td><strong style="color:var(--accent);">0.2924</strong></td>
-                <td>—</td>
-                <td>—</td>
                 <td>Statistical Baseline Score</td>
               </tr>
               <tr class="baseline-row">
                 <td><strong>Convolutional Neural Network (CNN)</strong></td>
                 <td><strong style="color:var(--accent);">26.517</strong></td>
                 <td><strong style="color:var(--accent);">0.7607</strong></td>
-                <td>—</td>
-                <td>—</td>
                 <td>Deep Learning Baseline (+5.56 dB)</td>
               </tr>
               <tr>
                 <td>U-Net</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
-                <td>—</td>
+                <td><strong style="color:var(--accent3);">27.493</strong></td>
+                <td><strong style="color:var(--accent3);">0.7863</strong></td>
                 <td>Encoder-Decoder with Skips</td>
               </tr>
               <tr class="best-row">
                 <td>Attn-Res U-Net ⭐</td>
-                <td>—</td>
-                <td>—</td>
                 <td>—</td>
                 <td>—</td>
                 <td><strong>Proposed Model (Best)</strong></td>
