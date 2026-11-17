@@ -20,7 +20,7 @@ LEARNING_RATE = 1e-4
 def unpack(arr):
     """Keep the last 128 frames and expand the packed width dimension."""
     arr = arr[-128:]
-    return np.repeat(arr, 8, axis=2)
+    return np.unpackbits(arr, axis=2)
 
 
 class CNN(nn.Module):

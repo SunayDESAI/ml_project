@@ -193,7 +193,7 @@
       <div class="container">
         <div class="section-label">03 · Preprocessing</div>
         <h2 class="section-title">From Photon Counts to Model Input</h2>
-        <p class="section-intro">Preprocessing transforms the raw 4-D bit-packed arrays into 384-channel tensors ready for the neural network, using <em>only training data statistics</em> to avoid leakage.</p>
+        <p class="section-intro">Preprocessing transforms the raw 4-D bit-packed arrays into 384-channel tensors ready for each neural network using the same fixed decoding and per-frame normalization.</p>
 
         <div class="steps-timeline">
           <div class="step">
@@ -208,11 +208,8 @@
             <div class="step-num">2</div>
             <div class="step-body">
               <h4>Bit Unpacking</h4>
-              <p>Each entry in the 100-element axis is a packed byte holding 8 binary photon-detection flags. <code>np.unpackbits</code> recovers all 800 binary values per pixel.</p>
+              <p>Each entry in the 100-element axis is a packed byte holding 8 binary photon-detection flags. All three training scripts use <code>np.unpackbits</code> to recover the 800-pixel width.</p>
               <pre><code>unpacked = np.unpackbits(frames, axis=2)  # (128, 800, 800, 3)</code></pre>
-              <div class="callout callout-warn">
-                ⚠ <strong>Not equivalent to np.repeat:</strong> <code>np.repeat(arr, 8, axis=2)</code> merely duplicates values, while <code>np.unpackbits</code> recovers the actual binary photon information encoded in each byte.
-              </div>
             </div>
           </div>
           <div class="step">
@@ -229,8 +226,10 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             <div class="step-num">4</div>
             <div class="step-body">
               <h4>Normalization</h4>
-              <p>Ground-truth PNG values are divided by 255 to map to <code>[0, 1]</code>. Input tensors already contain binary values <code>{0, 1}</code> from unpacking — no further normalization needed for inputs.</p>
-              <pre><code>gt = gt_image / 255.0  # float32 in [0.0, 1.0]</code></pre>
+              <p>Each decoded photon frame is converted to float and divided by its own maximum value. Ground-truth PNG values are divided by 255 to map to <code>[0, 1]</code>.</p>
+              <pre><code>frame = frame.astype(np.float32)
+frame = frame / (frame.max() + 1e-8)
+gt = gt_image.astype(np.float32) / 255.0</code></pre>
             </div>
           </div>
         </div>
@@ -728,7 +727,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             <h4>Implementation Constraints</h4>
             <ul>
               <li>Each scene is loaded as one full 800×800 sample, so training requires substantial GPU memory</li>
-              <li>The Attention-Residual U-Net normalizes each frame by its own maximum value, which can change relative exposure between frames</li>
+              <li>All three models normalize each frame by its own maximum value, which can change relative exposure between frames</li>
               <li>VGG-16 perceptual loss requires downloading/loading frozen ImageNet weights before training</li>
             </ul>
           </div>
@@ -775,7 +774,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             </div>
             <div class="takeaway">
               <span class="tk-num">02</span>
-              <span>Preprocessing must match the model: CNN/U-Net use repeated packed values, while Attention-Residual U-Net uses <code>np.unpackbits</code></span>
+              <span>All three models use <code>np.unpackbits</code> and per-frame max normalization before forming the 384-channel input</span>
             </div>
             <div class="takeaway">
               <span class="tk-num">03</span>
@@ -841,11 +840,7 @@ train_scenes = scenes[3:]   # remaining training scenes</code></pre>
               <pre><code># Shared tensor layout in all model scripts
 photon = raw[-128:]
 
-# CNN and U-Net scripts:
-photon = np.repeat(photon, 8, axis=2)
-frames = [frame.astype(np.float32) / 255.0 for frame in photon]
-
-# Attention-Residual U-Net script:
+# All three model scripts:
 photon = np.unpackbits(photon, axis=2)
 frames = [
     frame.astype(np.float32) / (frame.max() + 1e-8)
