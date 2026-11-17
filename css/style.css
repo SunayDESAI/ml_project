@@ -392,7 +392,7 @@ pre {
 /* ========== EVAL SECTION ========== */
 .eval-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.5rem;
   align-items: stretch;
 }
@@ -405,20 +405,28 @@ pre {
 .eval-card h4 { font-weight: 700; margin-bottom: 0.75rem; color: var(--accent); line-height: 1.25; }
 .eval-card p { font-size: 0.88rem; color: var(--text-muted); line-height: 1.65; }
 .eval-card code { white-space: normal; overflow-wrap: anywhere; }
+.eval-card-split { grid-column: 1 / -1; }
+.split-card-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  gap: 1.5rem;
+  align-items: center;
+}
+.split-card-layout p { max-width: 760px; }
 .split-bar {
   display: flex; border-radius: 6px; overflow: hidden;
-  margin-top: 1.25rem; height: 38px; border: 1px solid var(--border);
+  height: 44px; border: 1px solid var(--border);
 }
 .split-train {
   background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color: #fff; font-size: 0.72rem; font-weight: 700;
+  color: #fff; font-size: 0.78rem; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   flex: 47; min-width: 0; padding: 0 0.5rem;
   text-align: center;
 }
 .split-test {
   background: rgba(239,68,68,0.3); border-left: 1px solid var(--border);
-  color: #fca5a5; font-size: 0.68rem; font-weight: 700;
+  color: #fca5a5; font-size: 0.72rem; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   flex: 3; min-width: 54px; padding: 0 0.35rem;
   text-align: center;
@@ -438,13 +446,13 @@ pre {
 .metric-code { display: block; margin-top: 0.35rem; font-size: 0.72rem; color: #64748b; }
 
 @media (max-width: 1050px) {
-  .eval-grid { grid-template-columns: 1fr 1fr; }
-  .eval-card:last-child { grid-column: 1 / -1; }
+  .split-card-layout { grid-template-columns: 1fr; gap: 1rem; }
+  .split-bar { width: 100%; }
 }
 
 @media (max-width: 700px) {
   .eval-grid { grid-template-columns: 1fr; }
-  .eval-card:last-child { grid-column: auto; }
+  .eval-card-split { grid-column: auto; }
   .metric-heading { align-items: flex-start; }
   .split-train { font-size: 0.68rem; }
 }

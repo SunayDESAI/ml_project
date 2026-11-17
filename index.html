@@ -445,12 +445,14 @@ gt = gt_image.astype(np.float32) / 255.0</code></pre>
         <h2 class="section-title">How We Measured Success</h2>
 
         <div class="eval-grid">
-          <div class="eval-card">
+          <div class="eval-card eval-card-split">
             <h4>Split Strategy</h4>
-            <p>We selected the first 50 scenes after sorting the dataset folders, then used the first 3 scenes (<code>scenes[:3]</code>) as the held-out evaluation split and the remaining 47 scenes (<code>scenes[3:]</code>) for training. The split is scene-level, so all files from a scene stay in the same partition.</p>
-            <div class="split-bar">
-              <div class="split-train">Train · 47 scenes (94%)</div>
-              <div class="split-test">Val · 3 (6%)</div>
+            <div class="split-card-layout">
+              <p>We selected the first 50 scenes after sorting the dataset folders, then used the first 3 scenes (<code>scenes[:3]</code>) as held-out evaluation data and the remaining 47 scenes (<code>scenes[3:]</code>) for training. The split is scene-level, so every file from a scene stays in the same partition.</p>
+              <div class="split-bar">
+                <div class="split-train">Train · 47 scenes <span>(94%)</span></div>
+                <div class="split-test">Val · 3 <span>(6%)</span></div>
+              </div>
             </div>
           </div>
           <div class="eval-card">
