@@ -449,9 +449,15 @@ gt = gt_image.astype(np.float32) / 255.0</code></pre>
             <h4>Split Strategy</h4>
             <div class="split-card-layout">
               <p>We selected the first 50 scenes after sorting the dataset folders, then used the first 3 scenes (<code>scenes[:3]</code>) as held-out evaluation data and the remaining 47 scenes (<code>scenes[3:]</code>) for training. The split is scene-level, so every file from a scene stays in the same partition.</p>
-              <div class="split-bar">
-                <div class="split-train">Train · 47 scenes <span>(94%)</span></div>
-                <div class="split-test">Val · 3 <span>(6%)</span></div>
+              <div class="split-visual">
+                <div class="split-bar" aria-label="47 training scenes and 3 held-out scenes">
+                  <div class="split-train"></div>
+                  <div class="split-test"></div>
+                </div>
+                <div class="split-legend">
+                  <span><i class="split-dot split-dot-train"></i><strong>Train</strong> · 47 scenes · 94%</span>
+                  <span><i class="split-dot split-dot-test"></i><strong>Held out</strong> · 3 scenes · 6%</span>
+                </div>
               </div>
             </div>
           </div>

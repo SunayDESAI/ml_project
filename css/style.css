@@ -413,24 +413,39 @@ pre {
   align-items: center;
 }
 .split-card-layout p { max-width: 760px; }
+.split-visual { min-width: 280px; }
 .split-bar {
   display: flex; border-radius: 6px; overflow: hidden;
-  height: 44px; border: 1px solid var(--border);
+  height: 18px; border: 1px solid var(--border);
 }
 .split-train {
   background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color: #fff; font-size: 0.78rem; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  flex: 47; min-width: 0; padding: 0 0.5rem;
-  text-align: center;
+  flex: 47;
 }
 .split-test {
   background: rgba(239,68,68,0.3); border-left: 1px solid var(--border);
-  color: #fca5a5; font-size: 0.72rem; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  flex: 3; min-width: 54px; padding: 0 0.35rem;
-  text-align: center;
+  flex: 3;
 }
+.split-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+.split-legend strong { color: var(--text-muted); }
+.split-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.35rem;
+  vertical-align: 1px;
+}
+.split-dot-train { background: var(--accent); }
+.split-dot-test { background: #f87171; }
 .metric-list { display: flex; flex-direction: column; gap: 0.65rem; margin-top: 0; }
 .metric-item {
   background: rgba(0,212,255,0.04);
@@ -454,7 +469,8 @@ pre {
   .eval-grid { grid-template-columns: 1fr; }
   .eval-card-split { grid-column: auto; }
   .metric-heading { align-items: flex-start; }
-  .split-train { font-size: 0.68rem; }
+  .split-visual { min-width: 0; }
+  .split-legend { grid-template-columns: 1fr; }
 }
 
 /* ========== CHART ========== */
