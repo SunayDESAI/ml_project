@@ -17,11 +17,34 @@ ml_project/
 │   └── style.css       # Dark tech theme styles
 ├── js/
 │   └── main.js         # Charts, tabs, interactive compare, particles
+├── unet_training.py     # U-Net training and evaluation with L1 + SSIM + VGG loss
+├── cnn_training.py      # CNN training and evaluation with L1 + SSIM + VGG loss
+├── attn_res_unet_training.py # Attention-Residual U-Net training and evaluation
 ├── assets/
 │   ├── placeholder_gen.svg
 │   └── results/        # Place your reconstruction PNGs here
 └── .gitignore
 ```
+
+## 🧠 Training the U-Net
+
+`unet_training.py`, `cnn_training.py`, and `attn_res_unet_training.py` contain complete training and evaluation workflows. Their composite objective matches the methodology shown on the site:
+
+```
+loss = 0.7 * L1 + 0.2 * (1 - SSIM) + 0.1 * VGG perceptual loss
+```
+
+Run it in an environment with PyTorch, TorchVision, TorchMetrics, NumPy, Pillow, Matplotlib, and scikit-image:
+
+```bash
+python unet_training.py
+# or
+python cnn_training.py
+# or
+python attn_res_unet_training.py
+```
+
+The script expects the Kaggle dataset at the `DATASET` path defined near the top of the file. The training code is repository-only and is not loaded by the deployed website.
 
 ## 🚀 Deploy to GitHub Pages
 
