@@ -246,7 +246,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
 
         <div class="arch-tabs">
           <div class="tab-buttons">
-            <button class="tab-btn" data-tab="naive">Naïve Baseline</button>
+            <button class="tab-btn" data-tab="naive">Naive Baseline</button>
             <button class="tab-btn" data-tab="baseline">CNN</button>
             <button class="tab-btn" data-tab="unet">U-Net</button>
             <button class="tab-btn active" data-tab="attnres">Attn-Res U-Net (Proposed ⭐)</button>
@@ -256,8 +256,8 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
           <div class="tab-content" id="tab-naive">
             <div class="arch-layout">
               <div class="arch-desc">
-                <h3>Naïve Sum Baseline (256 Frames)</h3>
-                <p>Early photon-limited imaging relies on statistical reconstruction techniques such as temporal frame averaging and sensor response inversion. In our evaluation, we implemented the <strong>Naïve Sum baseline</strong> using 256 accumulated frames.</p>
+                <h3>Naive Sum Baseline (256 Frames)</h3>
+                <p>Early photon-limited imaging relies on statistical reconstruction techniques such as temporal frame averaging and sensor response inversion. In our evaluation, we implemented the <strong>Naive Sum baseline</strong> using 256 accumulated frames.</p>
                 <ul>
                   <li><strong>Frame Accumulation:</strong> Selects the last 256 temporal frames (<code>batch_size = 256</code>) and uncompresses bits: <code>pc = np.unpackbits(pc[-256:], axis=2)</code>.</li>
                   <li><strong>Normalized Average:</strong> Computes the mean photon intensity: <code>im = pc.sum(axis=0) / 256</code>.</li>
@@ -292,7 +292,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                 <ul>
                   <li>Input: 384 channels &rarr; Sequential Conv2D layers &rarr; 3-channel RGB</li>
                   <li>Plain feed-forward hierarchy without skip pathways</li>
-                  <li><strong>Benchmark Score:</strong> Achieves an <strong>Average PSNR of 26.517 dB</strong> and <strong>SSIM of 0.7607</strong> across the 3 test scenes (a +5.56 dB and +0.468 SSIM gain over Naïve Sum).</li>
+                  <li><strong>Benchmark Score:</strong> Achieves an <strong>Average PSNR of 26.517 dB</strong> and <strong>SSIM of 0.7607</strong> across the 3 test scenes (a +5.56 dB and +0.468 SSIM gain over Naive Sum).</li>
                 </ul>
                 <div class="arch-assumption">
                   <strong>Limitation:</strong> While convolutions learn spatial denoising filters effectively, the absence of encoder-decoder multiscale pooling and skip pathways prevents the plain CNN from capturing long-range contextual relationships.
@@ -495,7 +495,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
         <!-- Architecture Comparison Slider (INTERACTIVE ELEMENT) -->
         <div class="interaction-section">
           <h3>🔬 Interactive: Output Inspection &amp; Model Comparison</h3>
-          <p>Inspect and compare model reconstructions against the clean Ground Truth across the three held-out test scenes (<code>attic</code>, <code>bachelors-quarters</code>, <code>barbershop</code>). Ground Truth and Naïve Sum are loaded directly from our high-resolution Kaggle test evaluation!</p>
+          <p>Inspect and compare model reconstructions against the clean Ground Truth across the three held-out test scenes (<code>attic</code>, <code>bachelors-quarters</code>, <code>barbershop</code>). Ground Truth and Naive Sum are loaded directly from our high-resolution Kaggle test evaluation!</p>
           
           <div class="compare-toolbar">
             <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
@@ -519,7 +519,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
           <div class="compare-controls">
             <select id="leftArch" class="arch-select">
               <option value="gt">Ground Truth (Clean PNG)</option>
-              <option value="naive">Naïve Sum (256 frames)</option>
+              <option value="naive">Naive Sum (256 frames)</option>
               <option value="cnn" selected>CNN</option>
               <option value="unet">U-Net</option>
               <option value="attnres">Attn-Res U-Net (Proposed ⭐)</option>
@@ -527,7 +527,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             <span class="vs-badge">vs</span>
             <select id="rightArch" class="arch-select">
               <option value="gt">Ground Truth (Clean PNG)</option>
-              <option value="naive">Naïve Sum (256 frames)</option>
+              <option value="naive">Naive Sum (256 frames)</option>
               <option value="cnn">CNN</option>
               <option value="unet">U-Net</option>
               <option value="attnres" selected>Attn-Res U-Net (Proposed ⭐)</option>
@@ -567,8 +567,8 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
 
           <!-- Direct 3-Scene Gallery -->
           <div style="margin-top:2.5rem; padding-top:2rem; border-top:1px solid var(--border);">
-            <h4>🖼 All Held-out Test Scenes (Ground Truth vs. Naïve Sum vs. CNN vs. U-Net vs. Attn-Res)</h4>
-            <p style="color:var(--text-muted); font-size:0.88rem;">Side-by-side view of all three test scenes evaluated across Ground Truth, Naïve Sum, CNN, U-Net, and Attention-Residual U-Net reconstruction.</p>
+            <h4>🖼 All Held-out Test Scenes (Ground Truth vs. Naive Sum vs. CNN vs. U-Net vs. Attn-Res)</h4>
+            <p style="color:var(--text-muted); font-size:0.88rem;">Side-by-side view of all three test scenes evaluated across Ground Truth, Naive Sum, CNN, U-Net, and Attention-Residual U-Net reconstruction.</p>
             
             <div class="scene-gallery-grid">
               <!-- Card 1: Attic -->
@@ -585,7 +585,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                     </div>
                     <div class="scene-thumb-wrap">
                       <img src="assets/results/attic_naivesum.png" alt="attic naivesum" class="scene-thumb-img compare-img" />
-                      <span class="scene-thumb-label">Naïve Sum (21.77 dB)</span>
+                      <span class="scene-thumb-label">Naive Sum (21.77 dB)</span>
                     </div>
                     <div class="scene-thumb-wrap">
                       <img src="assets/results/attic_cnn.png" alt="attic cnn" class="scene-thumb-img compare-img" />
@@ -617,7 +617,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                     </div>
                     <div class="scene-thumb-wrap">
                       <img src="assets/results/bachelors_naivesum.png" alt="bachelors naivesum" class="scene-thumb-img compare-img" />
-                      <span class="scene-thumb-label">Naïve Sum (22.15 dB)</span>
+                      <span class="scene-thumb-label">Naive Sum (22.15 dB)</span>
                     </div>
                     <div class="scene-thumb-wrap">
                       <img src="assets/results/bachelors_cnn.png" alt="bachelors cnn" class="scene-thumb-img compare-img" />
@@ -649,7 +649,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                     </div>
                     <div class="scene-thumb-wrap">
                       <img src="assets/results/barbershop_naivesum.png" alt="barbershop naivesum" class="scene-thumb-img compare-img" />
-                      <span class="scene-thumb-label">Naïve Sum (18.94 dB)</span>
+                      <span class="scene-thumb-label">Naive Sum (18.94 dB)</span>
                     </div>
                     <div class="scene-thumb-wrap">
                       <img src="assets/results/barbershop_cnn.png" alt="barbershop cnn" class="scene-thumb-img compare-img" />
@@ -669,7 +669,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             </div>
           </div>
 
-          <p class="placeholder-note" style="color:var(--accent3); margin-top:1.5rem;">✔ Visual results loaded for Ground Truth, Naïve Sum, CNN, U-Net, and Attention-Residual U-Net.</p>
+          <p class="placeholder-note" style="color:var(--accent3); margin-top:1.5rem;">✔ Visual results loaded for Ground Truth, Naive Sum, CNN, U-Net, and Attention-Residual U-Net.</p>
         </div>
 
         <!-- Results Table -->
@@ -686,7 +686,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             </thead>
             <tbody>
               <tr class="baseline-row">
-                <td><strong>Naïve Sum Baseline (256 frames)</strong></td>
+                <td><strong>Naive Sum Baseline (256 frames)</strong></td>
                 <td><strong style="color:var(--accent);">20.955</strong></td>
                 <td><strong style="color:var(--accent);">0.2924</strong></td>
                 <td>Statistical Baseline Score</td>
@@ -712,56 +712,6 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             </tbody>
           </table>
 
-          <!-- Scene-level breakdown table for Naive Sum & CNN -->
-          <div style="margin-top:2rem;">
-            <h4>Per-Scene Test Performance Comparison (Naïve Sum vs. CNN)</h4>
-            <table class="results-table" style="margin-top:0.75rem;">
-              <thead>
-                <tr>
-                  <th>Scene Name</th>
-                  <th>Naïve Sum PSNR</th>
-                  <th>Naïve Sum SSIM</th>
-                  <th>CNN PSNR</th>
-                  <th>CNN SSIM</th>
-                  <th>CNN Gain (&Delta;PSNR)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><code>attic</code></td>
-                  <td>21.769 dB</td>
-                  <td>0.3077</td>
-                  <td><strong>28.410 dB</strong></td>
-                  <td><strong>0.7470</strong></td>
-                  <td style="color:var(--accent3); font-weight:700;">+6.64 dB</td>
-                </tr>
-                <tr>
-                  <td><code>bachelors-quarters</code></td>
-                  <td>22.152 dB</td>
-                  <td>0.2611</td>
-                  <td><strong>27.480 dB</strong></td>
-                  <td><strong>0.8110</strong></td>
-                  <td style="color:var(--accent3); font-weight:700;">+5.33 dB</td>
-                </tr>
-                <tr>
-                  <td><code>barbershop</code></td>
-                  <td>18.943 dB</td>
-                  <td>0.3085</td>
-                  <td><strong>23.660 dB</strong></td>
-                  <td><strong>0.7240</strong></td>
-                  <td style="color:var(--accent3); font-weight:700;">+4.72 dB</td>
-                </tr>
-                <tr style="background:rgba(0,212,255,0.06); font-weight:700;">
-                  <td style="color:var(--accent);">Test Set Average (3 scenes)</td>
-                  <td style="color:var(--accent);">20.955 dB</td>
-                  <td style="color:var(--accent);">0.2924</td>
-                  <td style="color:var(--accent3);">26.517 dB</td>
-                  <td style="color:var(--accent3);">0.7607</td>
-                  <td style="color:var(--accent3);">+5.56 dB</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
         </div>
       </div>
     </section>
@@ -775,29 +725,29 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
         <div class="error-grid">
           <div class="error-card err-type">
             <div class="err-icon">🔵</div>
-            <h4>Representative Failure Modes</h4>
+            <h4>Implementation Constraints</h4>
             <ul>
-              <li><strong>High-frequency texture:</strong> Models occasionally produce blurry textures in regions with very low photon density (< 1 photon/pixel)</li>
-              <li><strong>Color shift:</strong> VGG loss occasionally over-saturates colors in complex scenes</li>
-              <li><strong>Edge ringing:</strong> Transposed convolutions can produce checkerboard artefacts in some decoder stages</li>
+              <li>Each scene is loaded as one full 800×800 sample, so training requires substantial GPU memory</li>
+              <li>The Attention-Residual U-Net normalizes each frame by its own maximum value, which can change relative exposure between frames</li>
+              <li>VGG-16 perceptual loss requires downloading/loading frozen ImageNet weights before training</li>
             </ul>
           </div>
           <div class="error-card err-limit">
             <div class="err-icon">🟡</div>
             <h4>Dataset Limitations</h4>
             <ul>
-              <li>Only 50 scenes — small dataset for the complexity of the task</li>
-              <li>Scene-level split leaves only 3 test scenes; variance in test metrics is high</li>
-              <li>Dataset is specific to one photon-counting sensor — may not generalize to other hardware</li>
+              <li>Only the first 50 sorted scene folders are used</li>
+              <li>The first 3 scenes are held out for evaluation, so reported metrics have high scene-to-scene variance</li>
+              <li>The scripts select the first matching <code>.npy</code> and <code>.png</code> file in each scene directory</li>
             </ul>
           </div>
           <div class="error-card err-claim">
             <div class="err-icon">🔴</div>
             <h4>What We Cannot Claim</h4>
             <ul>
-              <li>Results cannot be treated as proof of causation between architecture choice and quality</li>
-              <li>Challenge leaderboard ranking does not fully reflect real-world deployment performance</li>
-              <li>PSNR/SSIM do not capture all aspects of perceptual quality</li>
+              <li>The scripts do not establish causal superiority because they do not run controlled ablations</li>
+              <li>Three held-out scenes are not sufficient to represent general deployment performance</li>
+              <li>PSNR and plain SSIM do not measure every aspect of perceptual quality</li>
             </ul>
           </div>
         </div>
@@ -812,28 +762,28 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
 
         <div class="conclusion-layout">
           <div class="conclusion-main">
-            <p>We demonstrated that deep learning — specifically U-Net-style encoder-decoder networks — can effectively reconstruct clean RGB images from extremely sparse single-photon measurements.</p>
-            <p>The progressive architectural additions of <strong>skip connections → residual blocks → attention gates</strong> each contributed measurable improvements in PSNR and SSIM, with the combined Attention-Residual U-Net achieving the best reconstruction quality in our experiments.</p>
-            <p>Composite loss functions (L1 + SSIM + VGG) consistently outperformed individual losses, confirming that pixel-level accuracy alone is insufficient for perceptually convincing reconstructions.</p>
+            <p>Our training scripts reconstruct RGB images from the last 128 photon frames using three models: a plain CNN, a two-level U-Net, and an Attention-Residual U-Net.</p>
+            <p>The Attention-Residual U-Net combines residual blocks, attention-gated skip connections, and a three-level encoder-decoder. In the supplied three-scene results, it reports the strongest PSNR and SSIM values among the displayed models.</p>
+            <p>All three training scripts use the same composite objective: <strong>0.7 L1 + 0.2 (1 − SSIM) + 0.1 VGG perceptual loss</strong>, optimized with Adam at a fixed learning rate of 1×10<sup>−4</sup> for 50 epochs.</p>
 
           </div>
           <div class="conclusion-takeaways">
             <h4>Key Takeaways</h4>
             <div class="takeaway">
               <span class="tk-num">01</span>
-              <span>U-Net skip connections are essential for preserving spatial detail lost to photon sparsity</span>
+              <span>Encoder-decoder skip connections provide direct access to higher-resolution features during reconstruction</span>
             </div>
             <div class="takeaway">
               <span class="tk-num">02</span>
-              <span>Bit unpacking (<code>np.unpackbits</code>) is critical — naive repetition loses photon information</span>
+              <span>Preprocessing must match the model: CNN/U-Net use repeated packed values, while Attention-Residual U-Net uses <code>np.unpackbits</code></span>
             </div>
             <div class="takeaway">
               <span class="tk-num">03</span>
-              <span>Attention gates help the model focus on sparse meaningful signals over mostly-zero inputs</span>
+              <span>Attention gates reweight encoder skip features before they are concatenated with decoder features</span>
             </div>
             <div class="takeaway">
               <span class="tk-num">04</span>
-              <span>Composite losses balance pixel accuracy, structure, and perceptual quality</span>
+              <span>The weighted L1, SSIM, and VGG terms balance pixel, structural, and feature-level supervision</span>
             </div>
           </div>
         </div>
@@ -852,13 +802,13 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             <div class="repro-num">1</div>
             <div class="repro-body">
               <h4>Get the Data</h4>
-              <p>Download the dataset from <a href="https://singlephotonchallenge.com" target="_blank" rel="noopener" style="color:var(--accent)">singlephotonchallenge.com</a>. Scene directories contain paired <code>.npy</code> photoncubes and <code>.png</code> ground-truth frames:</p>
-              <pre><code># Data organization
+            <p>Place the dataset in a local directory or Kaggle input directory. Each scene directory must contain at least one photon cube (<code>.npy</code>) and one clean RGB image (<code>.png</code>):</p>
+            <pre><code># Expected organization
 data/
   train/
     &lt;scene_name&gt;/
-      &lt;frame_idx&gt;.npy   # raw bitpacked photon measurements (1024, 800, 100, 3)
-      &lt;frame_idx&gt;.png   # clean ground-truth RGB corresponding to last bitplane</code></pre>
+      &lt;photon_file&gt;.npy   # photon measurements, typically (1024, 800, 100, 3)
+      &lt;clean_file&gt;.png    # clean RGB target</code></pre>
             </div>
           </div>
           <div class="repro-step">
@@ -867,7 +817,8 @@ data/
               <h4>Environment Setup</h4>
               <pre><code>conda create -n spc python=3.10
 conda activate spc
-pip install torch torchvision numpy scikit-image torchmetrics</code></pre>
+pip install torch torchvision numpy pillow matplotlib scikit-image torchmetrics</code></pre>
+            <p>All three training scripts also load pretrained VGG-16 ImageNet weights for the perceptual-loss term.</p>
             </div>
           </div>
           <div class="repro-step">
@@ -875,101 +826,65 @@ pip install torch torchvision numpy scikit-image torchmetrics</code></pre>
             <div class="repro-body">
               <h4>Data Split</h4>
               <pre><code>import os
-scenes = sorted(os.listdir("data/train/"))
-val_scenes   = scenes[:3]   # 3 held-out validation scenes (scene-level split)
-train_scenes = scenes[3:]   # 47 training scenes</code></pre>
+scenes = sorted(os.listdir(DATASET))[:50]
+test_scenes  = scenes[:3]   # held-out evaluation scenes
+train_scenes = scenes[3:]   # remaining training scenes</code></pre>
               <div class="callout callout-info">
-                ℹ Split is deterministic via <code>sorted()</code>. 47 scenes for training, 3 local scenes for validation.
+              ℹ The split is deterministic and scene-level: 47 scenes are used for training and 3 scenes are evaluated after training.
               </div>
             </div>
           </div>
           <div class="repro-step">
             <div class="repro-num">4</div>
             <div class="repro-body">
-              <h4>Naïve Sum Baseline Execution (batch_size = 256)</h4>
-              <p>Replicate the statistical baseline across the test scenes with camera response inversion and sRGB tonemapping:</p>
-              <pre><code>from pathlib import Path
-import numpy as np
-from PIL import Image
-from skimage.metrics import peak_signal_noise_ratio, structural_similarity
-from visionsim.emulate.spc import spc_avg_to_rgb
-from visionsim.utils.color import linearrgb_to_srgb
+              <h4>Preprocess a Scene</h4>
+              <pre><code># Shared tensor layout in all model scripts
+photon = raw[-128:]
 
-batch_size = 256
-for scene in test_scenes:
-    scene_path = Path("data/train") / scene
-    npy_file = list(scene_path.glob("*.npy"))[0]
-    png_file = list(scene_path.glob("*.png"))[0]
+# CNN and U-Net scripts:
+photon = np.repeat(photon, 8, axis=2)
+frames = [frame.astype(np.float32) / 255.0 for frame in photon]
 
-    # Load photon measurements & unpack last 256 frames
-    pc = np.load(npy_file)
-    pc = np.unpackbits(pc[-batch_size:], axis=2)
+# Attention-Residual U-Net script:
+photon = np.unpackbits(photon, axis=2)
+frames = [
+    frame.astype(np.float32) / (frame.max() + 1e-8)
+    for frame in photon
+]
 
-    # Average & sensor inversion
-    im = pc.sum(axis=0) / batch_size
-    im = spc_avg_to_rgb(im, factor=0.5)
-    im = linearrgb_to_srgb(im)
-    im = np.clip(im, 0, 1)
-
-    reconstructed = (im * 255).astype(np.uint8)
-    clean = np.array(Image.open(png_file).convert("RGB"))
-
-    psnr = peak_signal_noise_ratio(clean / 255.0, reconstructed / 255.0, data_range=1.0)
-    ssim = structural_similarity(clean / 255.0, reconstructed / 255.0, channel_axis=2, data_range=1.0)
-    print(f"{scene} -> PSNR: {psnr:.3f} dB, SSIM: {ssim:.4f}")
-# Output: Average PSNR: 20.955 dB, Average SSIM: 0.2924</code></pre>
+# For every model:
+frames = [torch.from_numpy(frame).permute(2, 0, 1) for frame in frames]
+noisy = torch.cat(frames, dim=0).unsqueeze(0)  # (1, 384, 800, 800)
+clean = clean.astype(np.float32) / 255.0</code></pre>
             </div>
           </div>
           <div class="repro-step">
             <div class="repro-num">5</div>
             <div class="repro-body">
-              <h4>Deep Learning Preprocessing &amp; Decoding</h4>
-              <pre><code>import numpy as np
-import torch
-
-def preprocess_photoncube(path):
-    # 1. Load bitpacked array: (1024, 800, 100, 3)
-    raw = np.load(path, mmap_mode="r")
-    # 2. Select last 128 temporal frames
-    frames = raw[-128:]  # (128, 800, 100, 3)
-    # 3. Width-wise bit-unpacking along axis=2
-    unpacked = np.unpackbits(frames.astype(np.uint8), axis=2) # (128, 800, 800, 3)
-    # 4. Permute to channel-first (T, C, H, W)
-    permuted = unpacked.transpose(0, 3, 1, 2)                 # (128, 3, 800, 800)
-    # 5. Temporal aggregation into high-dim channel tensor
-    tensor = permuted.reshape(384, 800, 800)                  # (384, 800, 800)
-    return torch.from_numpy(tensor).float()</code></pre>
+              <h4>Train a Model</h4>
+            <p>Set the <code>DATASET</code> constant in the selected script, then run one script at a time:</p>
+            <pre><code>python cnn_training.py
+python unet_training.py
+python attn_res_unet_training.py</code></pre>
+            <p>Each script trains for 50 epochs with Adam at <code>1e-4</code> and uses:</p>
+            <pre><code>loss = 0.7 * L1 + 0.2 * (1 - SSIM) + 0.1 * VGG</code></pre>
             </div>
           </div>
           <div class="repro-step">
             <div class="repro-num">6</div>
             <div class="repro-body">
-              <h4>Training (Proposed Attention Residual U-Net)</h4>
-              <pre><code>python train.py \
-  --arch attn_res_unet \
-  --epochs 50 \
-  --lr 1e-4 \
-  --weight_decay 1e-4 \
-  --loss_weights 0.7 0.2 0.1 \
-  --scheduler cosine \
-  --t_max 50 \
-  --eta_min 1e-6 \
-  --grad_clip 1.0 \
-  --amp \
-  --device cuda</code></pre>
-            </div>
-          </div>
-          <div class="repro-step">
-            <div class="repro-num">7</div>
-            <div class="repro-body">
               <h4>Inference &amp; Evaluation</h4>
-              <pre><code># Restore checkpoint from epoch 50 and run mixed precision inference
-python test.py \
-  --checkpoint checkpoints/attn_res_unet_epoch50.pth \
-  --batch_size 1 \
-  --amp \
-  --test_dir data/val_scenes \
-  --output_dir predictions/</code></pre>
+            <p>After the 50th epoch, each script evaluates the final in-memory model on the 3 held-out scenes. It computes PSNR and plain SSIM, then displays the ground-truth and prediction images.</p>
+            <pre><code>psnr = peak_signal_noise_ratio(clean_image, prediction_image, data_range=1.0)
+ssim = structural_similarity(
+    clean_image,
+    prediction_image,
+    channel_axis=2,
+    data_range=1.0,
+)</code></pre>
+            <div class="callout callout-info">
+              ℹ The scripts do not save checkpoints or provide a separate command-line inference tool; rerun the selected training script to reproduce its final evaluation.
+            </div>
             </div>
           </div>
         </div>

@@ -54,7 +54,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 /* ─── 5. Model comparison chart (Chart.js) ─── */
 const models = [
-  'Naïve Sum (256 frames)',
+  'Naive Sum (256 frames)',
   'CNN',
   'U-Net',
   'Attn-Res U-Net (Proposed ⭐)'
@@ -201,7 +201,7 @@ const sceneDatabase = {
 
 const archLabels = {
   gt:          'Ground Truth (Clean PNG)',
-  naive:       'Naïve Sum (256 frames)',
+  naive:       'Naive Sum (256 frames)',
   cnn:         'CNN',
   unet:        'U-Net',
   attnres:     'Attn-Res U-Net (Proposed ⭐)',
