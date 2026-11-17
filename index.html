@@ -385,16 +385,16 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
         <!-- Loss Functions & Optimization -->
         <div class="loss-section">
           <h3>Loss Formulation &amp; Training Strategy</h3>
-          <p>Supervision combines multi-scale pixel, structural, and perceptual losses:</p>
-          <div class="loss-eq">&Lscr; = 0.7 &middot; &Lscr;<sub>L1</sub> + 0.2 &middot; &Lscr;<sub>SSIM</sub> + 0.1 &middot; &Lscr;<sub>VGG</sub></div>
+          <p>Each training sample is supervised with pixel, structural, and perceptual losses:</p>
+          <div class="loss-eq">&Lscr; = 0.7 &middot; &Lscr;<sub>L1</sub> + 0.2 &middot; (1 - SSIM) + 0.1 &middot; &Lscr;<sub>VGG</sub></div>
           <div class="loss-cards">
             <div class="loss-card">
               <div class="loss-name">&Lscr;<sub>L1</sub> Pixel Loss (0.7)</div>
               <div class="loss-purpose">Measures pixel-wise absolute difference between prediction and ground truth. Provides strong, monotonic gradients for baseline intensity reconstruction.</div>
             </div>
             <div class="loss-card">
-              <div class="loss-name">&Lscr;<sub>SSIM</sub> Structural Loss (0.2)</div>
-              <div class="loss-purpose">Maximizes luminance, contrast, and structural correlation. Prevents blurring and preserves structural integrity under high Poisson noise.</div>
+              <div class="loss-name">(1 − SSIM) Structural Loss (0.2)</div>
+              <div class="loss-purpose">Converts the TorchMetrics SSIM score into a minimizable loss using <code>1 − SSIM</code>, encouraging luminance, contrast, and structural agreement.</div>
             </div>
             <div class="loss-card">
               <div class="loss-name">&Lscr;<sub>VGG</sub> Perceptual Loss (0.1)</div>
@@ -407,29 +407,29 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
             <div class="info-card">
               <div class="info-icon">⚙</div>
               <div>
-                <strong>Optimizer: AdamW</strong>
-                <p>Learning rate &eta;<sub>0</sub> = 1&times;10<sup>-4</sup>, weight decay = 1&times;10<sup>-4</sup>, gradient clipping norm &le; 1.0.</p>
+                <strong>Optimizer: Adam</strong>
+                <p>Adam optimizer with learning rate &eta; = 1&times;10<sup>-4</sup>. Gradients are clipped to a maximum norm of 1.0 before each update.</p>
               </div>
             </div>
             <div class="info-card">
-              <div class="info-icon">📉</div>
+              <div class="info-icon">🔁</div>
               <div>
-                <strong>Cosine Annealing Schedule</strong>
-                <p>&eta;<sub>t</sub> = &eta;<sub>min</sub> + &frac12;(&eta;<sub>0</sub> - &eta;<sub>min</sub>)(1 + cos(&pi;t / T<sub>max</sub>)) with T<sub>max</sub> = 50 epochs and &eta;<sub>min</sub> = 10<sup>-6</sup>.</p>
+                <strong>Training Schedule</strong>
+                <p>Training runs for 50 epochs with a fixed learning rate of 1&times;10<sup>-4</sup>; no learning-rate scheduler is applied.</p>
               </div>
             </div>
             <div class="info-card">
-              <div class="info-icon">⚡</div>
+              <div class="info-icon">🧮</div>
               <div>
-                <strong>Mixed Precision (AMP)</strong>
-                <p>Automatic mixed precision with torch.cuda.amp GradScaler for GPU throughput and memory efficiency.</p>
+                <strong>Precision</strong>
+                <p>Training uses standard PyTorch floating-point operations without automatic mixed precision or GradScaler.</p>
               </div>
             </div>
             <div class="info-card">
               <div class="info-icon">📊</div>
               <div>
-                <strong>Logging &amp; Checkpoints</strong>
-                <p>Checkpoints stored every 10 epochs. Model weights from epoch 50 restored for final evaluation and testing.</p>
+                <strong>Logging &amp; Evaluation</strong>
+                <p>The average training loss is printed after every epoch. The final model is evaluated on the three held-out scenes after training; no checkpoints are saved by the script.</p>
               </div>
             </div>
           </div>
