@@ -446,7 +446,7 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
         <div class="eval-grid">
           <div class="eval-card">
             <h4>Split Strategy</h4>
-            <p>We carved a local validation split from the 50 available training scenes: the first 3 scenes (<code>scenes[:3]</code>) were held out before any model selection or hyperparameter tuning. The official challenge test set (5 separate hidden scenes) was never used during development.</p>
+            <p>We selected the first 50 scenes after sorting the dataset folders, then used the first 3 scenes (<code>scenes[:3]</code>) as the held-out evaluation split and the remaining 47 scenes (<code>scenes[3:]</code>) for training. The split is scene-level, so all files from a scene stay in the same partition.</p>
             <div class="split-bar">
               <div class="split-train">Train · 47 scenes (94%)</div>
               <div class="split-test">Val · 3 (6%)</div>
@@ -461,21 +461,16 @@ tensor = tensor.reshape(384, 800, 800)</code></pre>
                 <div class="metric-note">Higher is better. Standard pixel-level quality in dB. <code>skimage.metrics.peak_signal_noise_ratio</code></div>
               </div>
               <div class="metric-item">
-                <div class="metric-name">MS-SSIM</div>
-                <div class="metric-formula">Multi-Scale Structural Similarity</div>
-                <div class="metric-note">Higher is better. The challenge uses MS-SSIM (multi-scale), not plain SSIM. <code>torchmetrics.MultiScaleStructuralSimilarityIndexMeasure</code></div>
-              </div>
-              <div class="metric-item">
-                <div class="metric-name">LPIPS</div>
-                <div class="metric-formula">Learned Perceptual Image Patch Similarity</div>
-                <div class="metric-note">Lower is better. Measures perceptual similarity using deep features. Official challenge ranking metric alongside PSNR and MS-SSIM.</div>
+                <div class="metric-name">SSIM</div>
+                <div class="metric-formula">Structural Similarity Index</div>
+                <div class="metric-note">Higher is better. Plain single-scale structural similarity is computed with <code>skimage.metrics.structural_similarity</code> using <code>channel_axis=2</code> and <code>data_range=1.0</code>.</div>
               </div>
             </div>
           </div>
           <div class="eval-card">
             <h4>Why These Metrics?</h4>
-            <p>Pixel-level metrics alone (MSE) can miss perceptual quality. The challenge officially ranks submissions on PSNR, MS-SSIM, and LPIPS — covering pixel accuracy, structural fidelity, and perceptual quality respectively. For each metric, mean and worst-case quantiles (5% and 1%) are reported to capture both average and tail performance.</p>
-            <p style="margin-top:0.75rem;">We additionally tracked plain SSIM locally for comparison, but MS-SSIM and LPIPS are the proper challenge-aligned metrics.</p>
+            <p>PSNR measures pixel-level reconstruction fidelity, while SSIM measures luminance, contrast, and structural agreement. Together they provide the two quantitative measures implemented in the evaluation code.</p>
+            <p style="margin-top:0.75rem;">Each held-out scene is evaluated independently after inference. The scripts report per-scene PSNR and SSIM and display the reconstructed image alongside the ground truth; they do not compute LPIPS, MS-SSIM, quantiles, or leaderboard scores.</p>
           </div>
         </div>
       </div>
